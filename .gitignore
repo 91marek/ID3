@@ -8,6 +8,7 @@
 *.DS_Store
 
 #Visual Studio files
+*.vcxproj*
 *.[Oo]bj
 *.exe
 *.pdb
