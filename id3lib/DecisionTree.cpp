@@ -9,7 +9,8 @@
 #endif
 
 #include "DecisionTree.hpp"
-
+#include <boost/shared_ptr.hpp>
+#include <boost/shared_array.hpp>
 using namespace id3lib;
 using namespace std;
 
@@ -20,9 +21,11 @@ DecisionTree::DecisionTree(const vector<vector<string> >& examples,
 				attributes.size()), categoryIndex_(categoryIndex) {
 
 	// Utworzenie tablicy na przyklady
-	unsigned ** ex = new unsigned *[examplesCount_];
-	for (unsigned i = 0; i < examplesCount_; ++i)
-		ex[i] = new unsigned[attributesCount_];
+	boost::shared_array< boost::shared_array<unsigned> >  ex(new boost::shared_array<unsigned>[examplesCount_]);
+	for (unsigned i = 0; i < examplesCount_; ++i) {
+		boost::shared_array<unsigned> tmp(new unsigned[attributesCount_]);
+		ex[i] = tmp;
+	}
 
 	// Mapowanie stringow na unsigned
 	// oraz zapamietywanie wystepujacych wartosci atrybutow
@@ -55,11 +58,12 @@ DecisionTree::DecisionTree(const vector<vector<string> >& examples,
 		for (unsigned j = 0; j < attributesCount_; ++j)
 			cout << "i=" << i << " j=" << j << " " << ex[i][j] << endl;
 #endif
-
+/* niepotrzebne
 	// Destrukcja tablicy na przyklady
 	for (unsigned i = 0; i < examplesCount_; ++i)
 		delete[] ex[i];
 	delete[] ex;
+*/
 }
 
 DecisionTree::~DecisionTree() {
