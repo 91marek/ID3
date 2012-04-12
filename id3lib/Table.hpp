@@ -18,7 +18,9 @@ private:
 	const std::vector<std::string> attr_;
 	std::vector<std::vector<std::string> > examples_;
 public:
+
 	Table(const std::vector<std::string>& attr);
+	Table(const std::vector<std::string>& attr, unsigned rows);
 	~Table();
 
 	void pushBack(const std::vector<std::string>& x);

@@ -4,21 +4,27 @@
 
 #include "Table.hpp"
 
-Table::Table(const std::vector<std::string>& attr) :
+using namespace std;
+
+Table::Table(const vector<string>& attr) :
 		attr_(attr), examples_() {
+}
+
+Table::Table(const vector<string>& attr, unsigned rows) :
+		attr_(attr), examples_(rows) {
 }
 
 Table::~Table() {
 
 }
 
-void Table::pushBack(const std::vector<std::string>& x) {
+void Table::pushBack(const vector<string>& x) {
 	if (x.size() != columns())
-		throw std::exception();
+		throw exception();
 	examples_.push_back(x);
 }
 
-std::vector<std::string> Table::getAttr() const {
+vector<string> Table::getAttr() const {
 	return attr_;
 }
 
