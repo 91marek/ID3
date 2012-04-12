@@ -14,13 +14,13 @@ namespace id3lib {
  */
 class DecisionTree {
 public:
-	/*
-	 * Tworzy drzewo decyzyjne na podstawie zbioru trenujacego
-	 * @param categoryIndex Indeks atrybutu bedacego kategoria
-	 */
-	DecisionTree(const std::vector<std::vector<std::string> >& examples,
-			const std::vector<std::string>& attributes, unsigned categoryIndex);
+	DecisionTree();
 	~DecisionTree();
+	/*
+	 * Buduje drzewo decyzyjne na podstawie przykladow
+	 */
+	void build(const Table& examples, size_t categoryIndex,
+			const std::string& missingValueMark);
 	/*
 	 * Przycina drzewo na podstawie zbioru trenujacego
 	 */
@@ -28,36 +28,41 @@ public:
 	/*
 	 * Przycina drzewo na podstawie zadanych przykladow
 	 */
-	void prune(const std::vector<std::vector<std::string> >& examples);
+	void prune(const Table& examples);
 	/*
 	 * Klasyfikuje zadane przyklady
 	 */
-	std::vector<std::string> classify(
-			const std::vector<std::vector<std::string> >& examples) const;
+	std::vector<std::string> classify(const Table& examples) const;
 	/*
 	 * @return Liczba atrybutow zbioru trenujacego
 	 * na podstawie ktorego drzewo zostalo utworzone
 	 */
-	unsigned getAttributesCount() const;
+	size_t getAttributesCount() const {
+		return attributesCount_;
+	}
 	/*
 	 * @return Liczba przykladow zbioru trenujacego
 	 * na podstawie ktorego drzewo zostalo utworzone
 	 */
-	unsigned getExamplesCount() const;
+	size_t getExamplesCount() const {
+		return examplesCount_;
+	}
 	/*
 	 * @return Indeks atrybutu bedacego kategoria
 	 */
-	unsigned getCategoryIndex() const;
+	size_t getCategoryIndex() const {
+		return categoryIndex_;
+	}
 protected:
 	/*
-	 * Wartosci poszczegolnych atrybutow jakie pojawily sie
+	 * Slownik wartosci atrybutow jakie pojawily sie
 	 * w zbiorze trenujacym
 	 */
 	std::vector<std::vector<std::string> > values_;
 	const std::vector<std::string> attributes_;
-	const unsigned examplesCount_;
-	const unsigned attributesCount_;
-	const unsigned categoryIndex_;
+	const size_t examplesCount_;
+	const size_t attributesCount_;
+	const size_t categoryIndex_;
 };
 }
 
