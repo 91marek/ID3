@@ -2,16 +2,11 @@
  * main.cpp
  */
 
-#include <iostream>
+#define DEBUG
 
+#include <iostream>
 #include <id3lib/DecisionTree.hpp>
 #include <id3lib/Table.hpp>
-
-using namespace std;
-
-string toString() {
-	return "ex";
-}
 
 using namespace std;
 using namespace id3lib;
@@ -24,7 +19,7 @@ int main() {
 	attributes.push_back("humidity");
 	attributes.push_back("wind");
 	attributes.push_back("play");
-	vector<vector<string> > examples = vector<vector<string> >();
+	Table examples = Table(attributes);
 	vector<string> ex0 = vector<string>();
 	ex0.push_back("sunny");
 	ex0.push_back("hot");
@@ -43,32 +38,20 @@ int main() {
 	ex2.push_back("high");
 	ex2.push_back("normal");
 	ex2.push_back("yes");
-	examples.push_back(ex0);
-	examples.push_back(ex1);
-	examples.push_back(ex2);
-	DecisionTree dt = DecisionTree(examples, attributes, attributes.size() - 1);
+	examples.pushBack(ex0);
+	examples.pushBack(ex1);
+	examples.pushBack(ex2);
+#ifdef DEBUG
+	cout << "examples:" << endl;
+	for (size_t i = 0; i < examples.rows(); ++i) {
+		for (size_t j = 0; j < examples.columns(); ++j) {
+			cout << examples.getValueAt(i, j) << " ";
+		}
+		cout << endl;
+	}
+#endif
+	DecisionTree dt = DecisionTree();
+	dt.build(examples, 4, "?");
 	cout << "Good Bye ID3!" << endl;
-	cout << "wypis" << endl;
-	vector<string> v = vector<string>();
-	v.push_back("a");
-	v.push_back("b");
-	Table t = Table(v);
-	v.push_back("c");
-	for (unsigned int i = 0; i < v.size(); ++i) {
-		cout << v[i] << endl;
-	}
-	vector<string> a = t.getAttr();
-	for (unsigned int i = 0; i < a.size(); ++i) {
-		cout << a[i] << endl;
-	}
-	a.push_back("d");
-	vector<string> a2 = t.getAttr();
-	for (unsigned int i = 0; i < a2.size(); ++i) {
-		cout << a2[i] << endl;
-	}
-	cout << "ostatnia petla" << endl;
-	for (unsigned int i = 0; i < a.size(); ++i) {
-		cout << a[i] << endl;
-	}
 	return 0;
 }

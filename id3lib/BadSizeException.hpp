@@ -9,7 +9,11 @@
 
 namespace id3lib {
 
+/*
+ * Wyjatek oznaczajacy zly rozmiar parametru
+ */
 class BadSizeException: public std::exception {
+
 };
 
 } /* namespace id3lib */

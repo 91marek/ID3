@@ -5,26 +5,23 @@
 #ifndef TABLE_HPP_
 #define TABLE_HPP_
 
+#include "BadSizeException.hpp"
 #include <string>
 #include <vector>
-#include <exception>
 
 namespace id3lib {
+
 /*
  * Klasa przechowujaca przyklady. Atrybuty sa inicjowane
  * w konstruktorze i sa stale dla obiektu.
  */
 class Table {
-private:
-	const std::vector<std::string> attr_;
-	std::vector<std::vector<std::string> > examples_;
-	const size_t columns_;
 public:
 	Table(const std::vector<std::string>& attr) :
 			attr_(attr), examples_() , columns_(attr.size()) {
 	}
 
-	void pushBack(const std::vector<std::string>& x);
+	void pushBack(const std::vector<std::string>& x) throw(BadSizeException);
 
 	const std::string& getAttrAt(size_t i) const {
 		return attr_.at(i);
@@ -45,7 +42,11 @@ public:
 	size_t rows() const {
 		return examples_.size();
 	}
+protected:
+	const std::vector<std::string> attr_;
+	std::vector<std::vector<std::string> > examples_;
+	const size_t columns_;
 };
-} /* namespace id3lib */
 
+} /* namespace id3lib */
 #endif /* TABLE_HPP_ */

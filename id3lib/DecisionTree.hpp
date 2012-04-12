@@ -5,16 +5,24 @@
 #ifndef DECISIONTREE_HPP_
 #define DECISIONTREE_HPP_
 
+#include "Table.hpp"
 #include <string>
 #include <vector>
 
 namespace id3lib {
+
 /*
  * Klasa reprezentujaca drzewo decyzyjne
  */
 class DecisionTree {
 public:
+	/*
+	 * Tworzy puste drzewo decyzyjne
+	 */
 	DecisionTree();
+	/*
+	 * Niszczy drzewo decyzyjne
+	 */
 	~DecisionTree();
 	/*
 	 * Buduje drzewo decyzyjne na podstawie przykladow
@@ -59,11 +67,12 @@ protected:
 	 * w zbiorze trenujacym
 	 */
 	std::vector<std::vector<std::string> > values_;
-	const std::vector<std::string> attributes_;
-	const size_t examplesCount_;
-	const size_t attributesCount_;
-	const size_t categoryIndex_;
+	std::vector<std::string> attributes_;
+	size_t examplesCount_;
+	size_t attributesCount_;
+	size_t categoryIndex_;
+	std::string missingValueMark_;
 };
-}
 
+} /* namespace id3lib */
 #endif /* DECISIONTREE_HPP_ */
