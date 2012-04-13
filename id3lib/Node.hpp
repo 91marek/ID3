@@ -29,6 +29,10 @@ public:
 			delete children_[i];
 	}
 
+	size_t getChildCount() const {
+		return children_.size();
+	}
+
 	Node* getChildAt(size_t i) const {
 		return children_[i];
 	}

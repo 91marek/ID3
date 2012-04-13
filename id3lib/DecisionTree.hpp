@@ -6,6 +6,7 @@
 #define DECISIONTREE_HPP_
 
 #include "Table.hpp"
+#include "Node.hpp"
 #include <string>
 #include <vector>
 
@@ -72,6 +73,7 @@ protected:
 	size_t attributesCount_;
 	size_t categoryIndex_;
 	std::string missingValueMark_;
+	Node* root;
 };
 
 } /* namespace id3lib */

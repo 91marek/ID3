@@ -16,10 +16,10 @@ using namespace id3lib;
 using namespace std;
 using namespace boost;
 
-// TODO sensownie zainicjowac wszystkie pola
 DecisionTree::DecisionTree() :
-		values_(), attributes_(), examplesCount_(0), attributesCount_(0), categoryIndex_(
-				0), missingValueMark_() {
+		values_(vector<vector<string> >()), attributes_(vector<string>()), examplesCount_(
+				0), attributesCount_(0), categoryIndex_(0), missingValueMark_(
+				""), root(NULL) {
 
 }
 
@@ -39,10 +39,10 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 	missingValueMark_ = missingValueMark;
 
 	// Utworzenie tablicy na przyklady
-	shared_array<shared_array<size_t> > ex(
+	shared_array<shared_array<size_t> > table(
 			new shared_array<size_t> [examplesCount_]);
 	for (size_t i = 0; i < examplesCount_; ++i)
-		ex[i] = shared_array<size_t>(new size_t[attributesCount_]);
+		table[i] = shared_array<size_t>(new size_t[attributesCount_]);
 
 	// Mapowanie stringow na size_t
 	// oraz zapamietywanie wystepujacych wartosci atrybutow
@@ -54,10 +54,10 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 					break;
 			}
 			if (k < values_[i].size()) // taka wartosc juz wystapila
-				ex[j][i] = k;
+				table[j][i] = k;
 			else { // zapamietanie nowej wartosci
 				values_[i].push_back(examples.getValueAt(j, i));
-				ex[j][i] = values_[i].size() - 1;
+				table[j][i] = values_[i].size() - 1;
 			}
 		}
 	}
@@ -73,13 +73,26 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 	}
 
 	// Wypisanie tablicy na przyklady
-	cout << "ex: " << endl;
+	cout << "table: " << endl;
 	for (size_t i = 0; i < examplesCount_; ++i) {
 		for (size_t j = 0; j < attributesCount_; ++j)
-			cout << ex[i][j] << " ";
+			cout << table[i][j] << " ";
 		cout << endl;
 	}
 #endif
+
+	// Utworzyc strukture wskazujaca na przyklady zwiazane z wezlem
+	// (lista par: indeks przykladu, waga)
+	delete root;
+	// Utworzyc wezel root
+	// Dodac wskazanie na wezel root i na strukture
+	// przykladow z nim zwiazanych do kolejki FIFO
+	// Petla: Dopoki sa w kolejce wezly wraz z przykladami z nimi
+	// zwiazanymi, przetwarzac kolejne wezly dodajac do
+	// kolejki wskazania na ich dzieci wraz z przykladami z nimi
+	// zwiazanymi
+	// !Pod koniec przetwarzania wezla usuwac strukture wskazujaca
+	// na przyklady zwiazane z tym wezlem
 }
 
 void DecisionTree::prune() {
