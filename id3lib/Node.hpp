@@ -17,7 +17,7 @@ public:
 	 */
 	Node(size_t category, size_t examplesCount) :
 			children_(std::vector<Node*>()), category_(category), examplesCount_(
-					examplesCount), misclassifiedExamplesCount_(0) {
+					examplesCount), misclassifiedExamplesCount_(0.0f), test_(0) {
 
 	}
 	/*
@@ -49,16 +49,28 @@ public:
 		category_ = category;
 	}
 
-	size_t getExamplesCount() const {
+	float getExamplesCount() const {
 		return examplesCount_;
 	}
 
-	size_t getMisclassifiedExamplesCount() const {
+	float getMisclassifiedExamplesCount() const {
 		return misclassifiedExamplesCount_;
 	}
 
-	void setMisclassifiedExamplesCount(size_t misclassifiedExamplesCount) {
+	void setMisclassifiedExamplesCount(float misclassifiedExamplesCount) {
 		misclassifiedExamplesCount_ = misclassifiedExamplesCount;
+	}
+
+	size_t getTest() const {
+		return test_;
+	}
+
+	void setTest(size_t test) {
+		test_ = test;
+	}
+
+	bool isLeaf() const {
+		return 0 == children_.size();
 	}
 protected:
 	/*
@@ -73,13 +85,17 @@ protected:
 	 * Liczba przykladow zbioru trenujacego
 	 * zwiazanych z wezlem
 	 */
-	const size_t examplesCount_;
+	const float examplesCount_;
 	/*
 	 * Liczba przykladow zbioru trenujacego
 	 * blednie klasyfikowanych przez
 	 * kategorie wezla
 	 */
-	size_t misclassifiedExamplesCount_;
+	float misclassifiedExamplesCount_;
+	/*
+	 * Testowany atrybut
+	 */
+	size_t test_;
 };
 
 } /* namespace id3lib */

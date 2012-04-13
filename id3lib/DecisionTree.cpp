@@ -11,6 +11,9 @@
 #include "DecisionTree.hpp"
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
+#include <list>
+#include <utility>
+#include <queue>
 
 using namespace id3lib;
 using namespace std;
@@ -83,16 +86,37 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 
 	// Utworzyc strukture wskazujaca na przyklady zwiazane z wezlem
 	// (lista par: indeks przykladu, waga)
+	list<pair<size_t, float> >* e = new list<pair<size_t, float> >();
+	for (size_t i = 0; i < examples.rows(); ++i)
+		(*e).push_back(pair<size_t, float>(i, 1.0f));
 	delete root;
 	// Utworzyc wezel root
+	root = new Node(0, e->size());
 	// Dodac wskazanie na wezel root i na strukture
 	// przykladow z nim zwiazanych do kolejki FIFO
+	queue<pair<Node*, list<pair<size_t, float> >* > > q = queue<pair<Node*, list<pair<size_t, float> >* > >();
+	q.push(pair<Node*, list<pair<size_t, float> >* >(root, e));
 	// Petla: Dopoki sa w kolejce wezly wraz z przykladami z nimi
 	// zwiazanymi, przetwarzac kolejne wezly dodajac do
 	// kolejki wskazania na ich dzieci wraz z przykladami z nimi
 	// zwiazanymi
 	// !Pod koniec przetwarzania wezla usuwac strukture wskazujaca
 	// na przyklady zwiazane z tym wezlem
+	while (!q.empty()) {
+		pair<Node*, list<pair<size_t, float> >* > next = q.pop();
+		// Jesli pusta lista przykladow to ja usunac i break
+		// (wtedy misclassifiedExamplesCount pozostaje 0 (?))
+		// (pozostaje kategoria odziedziczona po rodzicu)
+		// Wybrac kategorie
+		// Jesli wszystkie jednej kategorii to usunac liste przykladow i break
+		// Zbadac ile przykladow jest blednie klasyfikowanych
+		// Wybrac test
+		// Podzielic przyklady ze znanymi wartosciami wyniku testu
+		// (vector list)
+		// Podzielic przyklady z nieznanymi wartosciami
+		// Dodac do kolejki wszystkie dzieci z ich przykladami oraz
+		// usunac strukture przykladow zwiazanych z wezlem
+	}
 }
 
 void DecisionTree::prune() {
