@@ -9,11 +9,18 @@ namespace id3lib {
 
 class Example {
 public:
-	Example(size_t n, float w) : number(n), weight(w) {
+	Example(size_t n, float w) :
+			number(n), weight(w) {
 
 	}
-	size_t number;
-	float weight;
+	/*
+	 * Numer przykladu
+	 */
+	const size_t number;
+	/*
+	 * Waga przykladu
+	 */
+	const float weight;
 };
 
 } /* namespace id3lib */

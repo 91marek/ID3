@@ -15,7 +15,8 @@ public:
 	typedef std::list<Example>::const_iterator const_iterator;
 	typedef std::list<Example>::iterator iterator;
 
-	ListOfExamples() : list_(std::list<Example>()), weightSum_(0.0f) {
+	ListOfExamples() :
+			list_(std::list<Example>()), weightSum_(0.0f) {
 
 	}
 
@@ -46,7 +47,13 @@ public:
 		return weightSum_;
 	}
 protected:
+	/*
+	 * Lista przykladow
+	 */
 	std::list<Example> list_;
+	/*
+	 * Suma wag wszystkich przykladow znajdujacych sie w liscie
+	 */
 	float weightSum_;
 };
 

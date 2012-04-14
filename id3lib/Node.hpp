@@ -15,9 +15,8 @@ public:
 	 * Tworzy wezel o danej liczbie przykladow z nim zwiazanych
 	 */
 	Node(float examplesCount) :
-			children_(std::vector<Node*>()), category_(0), examplesCount_(
-					examplesCount), misclassifiedExamplesCount_(0.0f), test_(
-					0) {
+			children_(std::vector<Node*>()), category_(-1), examplesCount_(
+					examplesCount), misclassifiedExamplesCount_(0.0f), test_(0) {
 
 	}
 	/*
@@ -48,11 +47,11 @@ public:
 		children_[i] = child;
 	}
 
-	size_t getCategory() const {
+	int getCategory() const {
 		return category_;
 	}
 
-	void setCategory(size_t category) {
+	void setCategory(int category) {
 		category_ = category;
 	}
 
@@ -87,7 +86,7 @@ protected:
 	/*
 	 * Kategoria wezla
 	 */
-	size_t category_;
+	int category_;
 	/*
 	 * Liczba przykladow zbioru trenujacego
 	 * zwiazanych z wezlem

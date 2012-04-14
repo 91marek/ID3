@@ -57,12 +57,12 @@ int main() {
 	ex5.push_back("normal");
 	ex5.push_back("high");
 	ex5.push_back("no");
-	examples.pushBack(ex3);
-	examples.pushBack(ex4);
-	examples.pushBack(ex5);
 	examples.pushBack(ex0);
 	examples.pushBack(ex1);
 	examples.pushBack(ex2);
+	examples.pushBack(ex3);
+	examples.pushBack(ex4);
+	examples.pushBack(ex5);
 #ifdef DEBUG
 	cout << "examples:" << endl;
 	for (size_t i = 0; i < examples.rows(); ++i) {

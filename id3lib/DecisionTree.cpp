@@ -6,14 +6,14 @@
 
 #ifdef DEBUG
 #include <iostream>
+#include <boost/assert.hpp>
 #endif
 
 #include "DecisionTree.hpp"
 #include "Example.hpp"
 #include "ListOfExamples.hpp"
+#include "UnvisitedNode.hpp"
 #include <boost/shared_array.hpp>
-#include <boost/assert.hpp>
-#include <utility>	// std::pair
 #include <queue>
 
 using namespace id3lib;
@@ -23,9 +23,8 @@ using namespace boost;
 #ifdef DEBUG
 void printTree(Node* node, size_t depth) {
 	for (size_t i = 0; i < depth; ++i)
-		cout << "***";
-	cout << "test: " << node->getTest() << " cat: " << node->getCategory()
-			<< endl;
+		cout << "*******";
+	cout << "t:" << node->getTest() << " c:" << node->getCategory() << endl;
 	size_t new_depth = ++depth;
 	for (size_t i = 0; i < node->getChildrenCount(); ++i) {
 		Node* child = node->getChildAt(i);
@@ -119,50 +118,52 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 	}
 #endif
 
-	// Utworzenie struktury przechowujacej informacje
-	// o przykladach zwiazanych z wezlem root
+	// Utworzenie listy przykladow zwiazanych z wezlem root
 	ListOfExamples* e = new ListOfExamples();
 	for (size_t i = 0; i < examplesCount_; ++i)
 		e->pushBack(Example(i, 1.0f));
 
 #ifdef DEBUG
 	BOOST_ASSERT(e->size() == examplesCount_);
+	BOOST_ASSERT(e->weightSum() == static_cast<float>(examplesCount_));
 	for (ListOfExamples::const_iterator iter = e->begin(); iter != e->end();
 			++iter)
 		BOOST_ASSERT(iter->weight == 1.0f);
 #endif
 
+	// Utworzenie listy dotychczas niewykorzystanych testow
+	ListOfTests* t = new ListOfTests();
+	for (size_t i = 0; i < attributesCount_; ++i)
+		if (i != categoryIndex_) // nie testujemy kategorii
+			t->push_back(i);
+
+#ifdef DEBUG
+	BOOST_ASSERT(t->size() == attributesCount_ - 1);
+#endif
+
 	// Usuniecie biezacego drzewa
 	delete root;
 	// Utworzenie wezla root
-	root = new Node(e->size()); // size() poniewaz wszystkie przyklady maja wage 1.0f
-	// Dodanie do kolejki FIFO wskazania na wezel root
-	// i na strukture przykladow z nim zwiazanych
-	typedef pair<Node*, ListOfExamples*> NodeAndExamples;
-	queue<NodeAndExamples> q = queue<NodeAndExamples>();
-	q.push(NodeAndExamples(root, e));
+	root = new Node(e->weightSum());
 
-	// Przetwarzanie drzewa wszerz
-	size_t tempCounter = 0; // TODO wywalic po zaimplementowaniu wyboru testu
-	while (!q.empty()) {
-		NodeAndExamples queueHead = q.front();
-		q.pop();
-		// Zliczenie sumy wag przykladow dla poszczegolnych kategorii
-		// oraz sumy wag wszystkich przykladow
-		vector<float> categories = vector<float>(values_[categoryIndex_].size(),
-				float(0.0f));
+	// Dodanie do kolejki nieodwiedzonych wezlow wezla root
+	queue<UnvisitedNode> q = queue<UnvisitedNode>();
+	q.push(UnvisitedNode(root, e, t));
 
 #ifdef DEBUG
-		for (size_t i = 0; i < categories.size(); ++i) {
-			BOOST_ASSERT(categories[i] == 0.0f);
-		}
+	BOOST_ASSERT(q.size() == 1);
 #endif
 
-		float all = 0.0f; // suma wag wszystkich przykladow
-		for (ListOfExamples::const_iterator iter = queueHead.second->begin();
-				iter != queueHead.second->end(); ++iter) {
+	// Przetwarzanie drzewa wszerz
+	while (!q.empty()) {
+		UnvisitedNode queueHead = q.front();
+		q.pop();
+		// Zliczenie sumy wag przykladow dla poszczegolnych kategorii
+		vector<float> categories = vector<float>(values_[categoryIndex_].size(),
+				0.0f);
+		for (ListOfExamples::const_iterator iter = queueHead.examples->begin();
+				iter != queueHead.examples->end(); ++iter) {
 			categories[table[iter->number][categoryIndex_]] += iter->weight;
-			all += iter->weight;
 		}
 		// Wybranie kategorii wiekszosciowej
 		float max = 0.0f;
@@ -173,94 +174,111 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 				maxIndex = static_cast<int>(i);
 			}
 		}
+#ifdef DEBUG
 		BOOST_ASSERT(max != 0.0f);
-		BOOST_ASSERT(maxIndex != -1);
+		BOOST_ASSERT(maxIndex >= 0);
+#endif
 		// Zapisanie kategorii wiekszosciowej w wezle
-		queueHead.first->setCategory(static_cast<size_t>(maxIndex));
-		if (all == max) { // wszystkie przyklady jednej kategorii
-			queueHead.first->setMisclassifiedExamplesCount(0.0f); // wszystkie poprawnie klasyfikowane
-			delete queueHead.second; // usuniecie przykladow zwiazanych z wezlem
+		queueHead.node->setCategory(maxIndex);
+		if (queueHead.examples->weightSum() == max) { // wszystkie przyklady jednej kategorii
+			queueHead.node->setMisclassifiedExamplesCount(0.0f); // wiec wszystkie poprawnie klasyfikowane
+			delete queueHead.examples; // usuniecie przykladow zwiazanych z wezlem
+			delete queueHead.tests; // usuniecie niewykorzystanych testow
 			continue;
 		}
-		// Obliczenie i zapisanie liczby przykladow blednie klasyfikowanych
+		// Obliczenie liczby przykladow blednie klasyfikowanych
 		float misclassifiedCounter = 0.0f;
-		for (ListOfExamples::const_iterator iter = queueHead.second->begin();
-				iter != queueHead.second->end(); ++iter) {
+		for (ListOfExamples::const_iterator iter = queueHead.examples->begin();
+				iter != queueHead.examples->end(); ++iter) {
 			if (table[iter->number][categoryIndex_]
-					!= static_cast<int>(queueHead.first->getCategory()))
+					!= queueHead.node->getCategory())
 				misclassifiedCounter += iter->weight;
 		}
-		queueHead.first->setMisclassifiedExamplesCount(misclassifiedCounter);
+		// Zapisanie liczby przykladow blednie klasyfikowanych
+		queueHead.node->setMisclassifiedExamplesCount(misclassifiedCounter);
 		// Wybranie testu
 		size_t bestTest = 0;
-		//double maxInformationGain = 0.0;
-		// tymczasowo:
-		if (tempCounter == categoryIndex_)
-			++tempCounter;
-		bestTest = tempCounter;
-		++tempCounter;
-		for (size_t i = 0; i < attributesCount_; ++i) {
-			if (i == categoryIndex_) // nie testujemy kategorii
-				continue;
-			// TODO
-			// bez sensu liczyc informationGain dla wszystkich atrybutow
-			// bo w poddrzewie nie chcemy drugi raz uzywac tego samego testu
-			// trzeba jakos przekazac ktore testy zostaly wykonane lub jakie pozostaly
+		double maxInformationGain = 0.0;
+		ListOfTests::iterator bestTestIterator = queueHead.tests->begin();
+		for (ListOfTests::iterator iter = queueHead.tests->begin();
+				iter != queueHead.tests->end(); ++iter) {
+			double informationGain = 0.0f;
+			// TODO obliczyc informationGain dla testu wskazywanego przez iter
+			// tymczasowo:
+			informationGain = *iter; // pozniej to wywalic!
+			if (informationGain > maxInformationGain) {
+				maxInformationGain = informationGain;
+				bestTest = *iter;
+				bestTestIterator = iter;
+			}
 		}
+		queueHead.tests->erase(bestTestIterator);
 
 #ifdef DEBUG
 		cout << "Wybrany test: " << attributes_[bestTest] << endl;
 #endif
 
-		queueHead.first->setTest(bestTest);
-		// Struktura na przyklady dla dzieci
-		size_t childrenCount = values_[bestTest].size(); // liczba dzieci
-		vector<ListOfExamples> childrenExamples = vector<ListOfExamples>(
+		// Zapisanie wybranego testu w wezle
+		queueHead.node->setTest(bestTest);
+		// Utworzenie struktury na przyklady dla dzieci
+		size_t childrenCount = values_[queueHead.node->getTest()].size(); // liczba dzieci
+		vector<ListOfExamples*> childrenExamples = vector<ListOfExamples*>(
 				childrenCount);
-
+		for (size_t i = 0; i < childrenExamples.size(); ++i)
+			childrenExamples[i] = new ListOfExamples();
+		// Bylo tak:
+		// vector<ListOfExamples*> childrenExamples = vector<ListOfExamples*>(childrenCount, new ListOfExamples());
+		// i nie dzialalo!!! Tworzona byla jedna lista a wskazanie do niej bylo kopiowane childrenCount razy!!!
 #ifdef DEBUG
+		BOOST_ASSERT(childrenExamples.size() == childrenCount);
 		for (size_t i = 0; i < childrenExamples.size(); ++i) {
-			BOOST_ASSERT(childrenExamples[i].size() == 0);
+			BOOST_ASSERT(childrenExamples[i]->size() == 0);
 		}
 #endif
-
-		vector<float> weightSum = vector<float>(childrenCount, float(0.0f));
 		// Podzielenie przykladow ze znanymi wartosciami wybranego testu
-		for (ListOfExamples::iterator iter = queueHead.second->begin();
-				iter != queueHead.second->end();) {
-			int value = table[iter->number][bestTest];
+		for (ListOfExamples::iterator iter = queueHead.examples->begin();
+				iter != queueHead.examples->end();) {
+			int value = table[iter->number][queueHead.node->getTest()];
 			if (value == -1) // nieznana wartosc
 				++iter;
 			else {
-				childrenExamples[value].pushBack(
+				childrenExamples[value]->pushBack(
 						Example(iter->number, iter->weight));
-				weightSum[value] += iter->weight;
-				iter = queueHead.second->erase(iter);
+				iter = queueHead.examples->erase(iter);
 			}
 		}
+		// Wyznaczenie mnoznikow
+		vector<float> multipliers = vector<float>(childrenCount, float(0.0f));
+		for (size_t i = 0; i < multipliers.size(); ++i) {
+			multipliers[i] = childrenExamples[i]->weightSum()
+					/ queueHead.examples->weightSum();
+		}
 		// Podzielenie przykladow z nieznanymi wartosciami wybranego testu
-		for (ListOfExamples::const_iterator iter = queueHead.second->begin();
-				iter != queueHead.second->end(); ++iter) {
+		for (ListOfExamples::const_iterator iter = queueHead.examples->begin();
+				iter != queueHead.examples->end(); ++iter) {
 			for (size_t i = 0; i < childrenExamples.size(); ++i) {
-				childrenExamples[i].pushBack(
-						Example(iter->number,
-								iter->weight * weightSum[i] / all));
+				if (0.0f == multipliers[i]) // nie bylo przykladu o tej wartosci atrybutu
+					continue;
+				childrenExamples[i]->pushBack(
+						Example(iter->number, iter->weight * multipliers[i]));
 			}
 		}
 		// Dodanie do kolejki wszystkich dzieci z ich przykladami
 		vector<Node*> children = vector<Node*>(childrenCount, NULL);
 		for (size_t i = 0; i < childrenExamples.size(); ++i) {
-			if (0 == childrenExamples[i].size()) // nie bylo przykladu o tej wartosci atrybutu
+			if (0 == childrenExamples[i]->size()) { // nie bylo przykladu o tej wartosci atrybutu
+				delete (childrenExamples[i]);
 				continue;
-			children[i] = new Node(weightSum[i]);
-			ListOfExamples* e = new ListOfExamples(childrenExamples[i]);
-			q.push(NodeAndExamples(children[i], e));
+			}
+			children[i] = new Node(childrenExamples[i]->weightSum());
+			q.push(
+					UnvisitedNode(children[i], childrenExamples[i],
+							new ListOfTests(*queueHead.tests)));
 		}
 		// Ustawienie rodzicowi wskazan na dzieci
-		queueHead.first->setChildren(children);
-		// Usuniecie struktury przechowujacej informacje
-		// o przykladach zwiazanych z wezlem
-		delete queueHead.second;
+		queueHead.node->setChildren(children);
+		delete queueHead.examples; // usuniecie przykladow zwiazanych z wezlem
+		delete queueHead.tests; // usuniecie niewykorzystanych testow
 	}
 
 #ifdef DEBUG

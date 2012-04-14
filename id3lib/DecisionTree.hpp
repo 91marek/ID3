@@ -63,17 +63,44 @@ public:
 	size_t getCategoryIndex() const {
 		return categoryIndex_;
 	}
+	/*
+	 * @return Znak reprezentujacy brakujaca wartosc
+	 */
+	const std::string& getMissingValueMark() const {
+		return missingValueMark_;
+	}
 protected:
 	/*
 	 * Slownik wartosci atrybutow jakie pojawily sie
 	 * w zbiorze trenujacym
 	 */
 	std::vector<std::vector<std::string> > values_;
+	/*
+	 * Atrybuty przykladow na podstawie ktorych
+	 * drzewo zostalo utworzone
+	 */
 	std::vector<std::string> attributes_;
+	/*
+	 * Liczba przykladow na podstawie ktorych
+	 * drzewo zostalo utworzone
+	 */
 	size_t examplesCount_;
+	/*
+	 * Liczba atrybutow na podstawie ktorych
+	 * drzewo zostalo utworzone
+	 */
 	size_t attributesCount_;
+	/*
+	 * Indeks atrybutu bedacego kategoria
+	 */
 	size_t categoryIndex_;
+	/*
+	 * Znak reprezentujacy brakujaca wartosc
+	 */
 	std::string missingValueMark_;
+	/*
+	 * Wskazanie na korzen drzewa decyzyjnego
+	 */
 	Node* root;
 };
 
