@@ -10,9 +10,9 @@
 
 #include "DecisionTree.hpp"
 #include "Example.hpp"
+#include "ListOfExamples.hpp"
 #include <boost/shared_array.hpp>
 #include <boost/assert.hpp>
-#include <list>
 #include <utility>	// std::pair
 #include <queue>
 
@@ -121,10 +121,9 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 
 	// Utworzenie struktury przechowujacej informacje
 	// o przykladach zwiazanych z wezlem root
-	typedef list<Example> ListOfExamples; // lista par: numer przykladu, waga
 	ListOfExamples* e = new ListOfExamples();
 	for (size_t i = 0; i < examplesCount_; ++i)
-		e->push_back(Example(i, 1.0f));
+		e->pushBack(Example(i, 1.0f));
 
 #ifdef DEBUG
 	BOOST_ASSERT(e->size() == examplesCount_);
@@ -233,7 +232,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 			if (value == -1) // nieznana wartosc
 				++iter;
 			else {
-				childrenExamples[value].push_back(
+				childrenExamples[value].pushBack(
 						Example(iter->number, iter->weight));
 				weightSum[value] += iter->weight;
 				iter = queueHead.second->erase(iter);
@@ -243,7 +242,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		for (ListOfExamples::const_iterator iter = queueHead.second->begin();
 				iter != queueHead.second->end(); ++iter) {
 			for (size_t i = 0; i < childrenExamples.size(); ++i) {
-				childrenExamples[i].push_back(
+				childrenExamples[i].pushBack(
 						Example(iter->number,
 								iter->weight * weightSum[i] / all));
 			}
