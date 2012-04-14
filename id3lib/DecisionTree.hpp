@@ -9,6 +9,7 @@
 #include "Node.hpp"
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 namespace id3lib {
 
@@ -29,7 +30,7 @@ public:
 	 * Buduje drzewo decyzyjne na podstawie przykladow
 	 */
 	void build(const Table& examples, size_t categoryIndex,
-			const std::string& missingValueMark);
+			const std::string& missingValueMark) throw (std::invalid_argument);
 	/*
 	 * Przycina drzewo na podstawie zbioru trenujacego
 	 */

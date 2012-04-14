@@ -7,6 +7,7 @@
 #include <iostream>
 #include <id3lib/DecisionTree.hpp>
 #include <id3lib/Table.hpp>
+#include <boost/assert.hpp>
 
 using namespace std;
 using namespace id3lib;
@@ -38,6 +39,27 @@ int main() {
 	ex2.push_back("high");
 	ex2.push_back("normal");
 	ex2.push_back("yes");
+	vector<string> ex3 = vector<string>();
+	ex3.push_back("rainy");
+	ex3.push_back("mild");
+	ex3.push_back("high");
+	ex3.push_back("normal");
+	ex3.push_back("yes");
+	vector<string> ex4 = vector<string>();
+	ex4.push_back("rainy");
+	ex4.push_back("cold");
+	ex4.push_back("normal");
+	ex4.push_back("normal");
+	ex4.push_back("yes");
+	vector<string> ex5 = vector<string>();
+	ex5.push_back("rainy");
+	ex5.push_back("cold");
+	ex5.push_back("normal");
+	ex5.push_back("high");
+	ex5.push_back("no");
+	examples.pushBack(ex3);
+	examples.pushBack(ex4);
+	examples.pushBack(ex5);
 	examples.pushBack(ex0);
 	examples.pushBack(ex1);
 	examples.pushBack(ex2);

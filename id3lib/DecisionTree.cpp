@@ -9,15 +9,30 @@
 #endif
 
 #include "DecisionTree.hpp"
-#include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
+#include <boost/assert.hpp>
 #include <list>
-#include <utility>
+#include <utility>	// std::pair
 #include <queue>
 
 using namespace id3lib;
 using namespace std;
 using namespace boost;
+
+#ifdef DEBUG
+void printTree(Node* node, size_t depth) {
+	for (size_t i = 0; i < depth; ++i)
+		cout << "***";
+	cout << "test: " << node->getTest() << " cat: " << node->getCategory()
+			<< endl;
+	size_t new_depth = ++depth;
+	for (size_t i = 0; i < node->getChildrenCount(); ++i) {
+		Node* child = node->getChildAt(i);
+		if (child != NULL)
+			printTree(child, new_depth);
+	}
+}
+#endif
 
 DecisionTree::DecisionTree() :
 		values_(vector<vector<string> >()), attributes_(vector<string>()), examplesCount_(
@@ -27,40 +42,59 @@ DecisionTree::DecisionTree() :
 }
 
 DecisionTree::~DecisionTree() {
-
+	delete root;
 }
 
 void DecisionTree::build(const Table& examples, size_t categoryIndex,
-		const std::string& missingValueMark) {
+		const string& missingValueMark) throw (invalid_argument) {
+	// Sprawdzenie poprawnosci parametrow
+	if (examples.columns() < 2) // musi byc przynajmniej 1 atrybut + kategoria
+		throw invalid_argument(
+				"Table must have 2 or more columns (1 or more attributes + category).");
+	if (0 == examples.rows()) // brak przykladow w zbiorze trenujacym
+		throw invalid_argument(
+				"Table must have 1 or more rows (1 or more examples).");
+	if (categoryIndex >= examples.columns()) // nie ma tylu kolumn w zbiorze przykladow
+		throw invalid_argument("Index of category column is out of bounds.");
+	// jezeli to sprawdzenie zostanie wykonane pozniej to obiekt moze pozostac
+	// w stanie nieustalonym na skutek rzucenia wyjatku
+	// (degeneracja dotychczas zbudowanego drzewa == bledy przy klasyfikacji)
+	for (size_t x = 0; x < examples.rows(); ++x)
+		if (examples.getValueAt(x, categoryIndex) == missingValueMark) // przyklad z brakujaca kategoria
+			throw invalid_argument("Category could not have missing values.");
+
 	// Inicjalizacja
-	vector<vector<string> > values_ = vector<vector<string> >(
-			examples.columns());
-	vector<string> attributes_ = examples.getAttr();
+	values_ = vector<vector<string> >(examples.columns());
+	attributes_ = examples.getAttr();
 	examplesCount_ = examples.rows();
 	attributesCount_ = examples.columns();
 	categoryIndex_ = categoryIndex;
 	missingValueMark_ = missingValueMark;
 
 	// Utworzenie tablicy na przyklady
-	shared_array<shared_array<size_t> > table(
-			new shared_array<size_t> [examplesCount_]);
+	shared_array<shared_array<int> > table(
+			new shared_array<int> [examplesCount_]);
 	for (size_t i = 0; i < examplesCount_; ++i)
-		table[i] = shared_array<size_t>(new size_t[attributesCount_]);
+		table[i] = shared_array<int>(new int[attributesCount_]);
 
-	// Mapowanie stringow na size_t
+	// Mapowanie stringow na int
 	// oraz zapamietywanie wystepujacych wartosci atrybutow
-	for (size_t i = 0; i < attributesCount_; ++i) {
-		for (size_t j = 0; j < examplesCount_; ++j) {
-			size_t k = 0;
-			for (; k < values_[i].size(); ++k) { // sprawdzenie czy taka wartosc juz wystapila
-				if (examples.getValueAt(j, i) == values_[i][k])
+	for (int y = 0; y < static_cast<int>(attributesCount_); ++y) {
+		for (int x = 0; x < static_cast<int>(examplesCount_); ++x) {
+			if (examples.getValueAt(x, y) == missingValueMark_) {
+				table[x][y] = -1; // -1 dla brakujacych wartosci
+				continue;
+			}
+			int k = 0;
+			for (; k < static_cast<int>(values_[y].size()); ++k) { // sprawdzenie czy taka wartosc juz wystapila
+				if (examples.getValueAt(x, y) == values_[y][k])
 					break;
 			}
-			if (k < values_[i].size()) // taka wartosc juz wystapila
-				table[j][i] = k;
+			if (k < static_cast<int>(values_[y].size())) // taka wartosc juz wystapila
+				table[x][y] = k;
 			else { // zapamietanie nowej wartosci
-				values_[i].push_back(examples.getValueAt(j, i));
-				table[j][i] = values_[i].size() - 1;
+				values_[y].push_back(examples.getValueAt(x, y));
+				table[x][y] = values_[y].size() - 1;
 			}
 		}
 	}
@@ -84,39 +118,156 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 	}
 #endif
 
-	// Utworzyc strukture wskazujaca na przyklady zwiazane z wezlem
-	// (lista par: indeks przykladu, waga)
-	list<pair<size_t, float> >* e = new list<pair<size_t, float> >();
-	for (size_t i = 0; i < examples.rows(); ++i)
-		(*e).push_back(pair<size_t, float>(i, 1.0f));
+	// Utworzenie struktury przechowujacej informacje
+	// o przykladach zwiazanych z wezlem root
+	typedef pair<size_t, float> Example; // numer przykladu, waga
+	typedef list<Example> ListOfExamples; // lista par: numer przykladu, waga
+	ListOfExamples* e = new ListOfExamples();
+	for (size_t i = 0; i < examplesCount_; ++i)
+		e->push_back(Example(i, 1.0f));
+
+#ifdef DEBUG
+	BOOST_ASSERT(e->size() == examplesCount_);
+	for (ListOfExamples::const_iterator iter = e->begin(); iter != e->end();
+			++iter)
+		BOOST_ASSERT(iter->second == 1.0f);
+#endif
+
+	// Usuniecie biezacego drzewa
 	delete root;
-	// Utworzyc wezel root
-	root = new Node(0, e->size());
-	// Dodac wskazanie na wezel root i na strukture
-	// przykladow z nim zwiazanych do kolejki FIFO
-	queue<pair<Node*, list<pair<size_t, float> >* > > q = queue<pair<Node*, list<pair<size_t, float> >* > >();
-	q.push(pair<Node*, list<pair<size_t, float> >* >(root, e));
-	// Petla: Dopoki sa w kolejce wezly wraz z przykladami z nimi
-	// zwiazanymi, przetwarzac kolejne wezly dodajac do
-	// kolejki wskazania na ich dzieci wraz z przykladami z nimi
-	// zwiazanymi
-	// !Pod koniec przetwarzania wezla usuwac strukture wskazujaca
-	// na przyklady zwiazane z tym wezlem
+	// Utworzenie wezla root
+	root = new Node(e->size()); // size() poniewaz wszystkie przyklady maja wage 1.0f
+	// Dodanie do kolejki FIFO wskazania na wezel root
+	// i na strukture przykladow z nim zwiazanych
+	typedef pair<Node*, ListOfExamples*> NodeAndExamples;
+	queue<NodeAndExamples> q = queue<NodeAndExamples>();
+	q.push(NodeAndExamples(root, e));
+
+	// Przetwarzanie drzewa wszerz
+	size_t tempCounter = 0; // TODO wywalic po zaimplementowaniu wyboru testu
 	while (!q.empty()) {
-		pair<Node*, list<pair<size_t, float> >* > next = q.pop();
-		// Jesli pusta lista przykladow to ja usunac i break
-		// (wtedy misclassifiedExamplesCount pozostaje 0 (?))
-		// (pozostaje kategoria odziedziczona po rodzicu)
-		// Wybrac kategorie
-		// Jesli wszystkie jednej kategorii to usunac liste przykladow i break
-		// Zbadac ile przykladow jest blednie klasyfikowanych
-		// Wybrac test
-		// Podzielic przyklady ze znanymi wartosciami wyniku testu
-		// (vector list)
-		// Podzielic przyklady z nieznanymi wartosciami
-		// Dodac do kolejki wszystkie dzieci z ich przykladami oraz
-		// usunac strukture przykladow zwiazanych z wezlem
+		NodeAndExamples queueHead = q.front();
+		q.pop();
+		// Zliczenie sumy wag przykladow dla poszczegolnych kategorii
+		// oraz sumy wag wszystkich przykladow
+		vector<float> categories = vector<float>(values_[categoryIndex_].size(),
+				float(0.0f));
+
+#ifdef DEBUG
+		for (size_t i = 0; i < categories.size(); ++i) {
+			BOOST_ASSERT(categories[i] == 0.0f);
+		}
+#endif
+
+		float all = 0.0f; // suma wag wszystkich przykladow
+		for (ListOfExamples::const_iterator iter = queueHead.second->begin();
+				iter != queueHead.second->end(); ++iter) {
+			categories[table[iter->first][categoryIndex_]] += iter->second;
+			all += iter->second;
+		}
+		// Wybranie kategorii wiekszosciowej
+		float max = 0.0f;
+		int maxIndex = -1;
+		for (size_t i = 0; i < categories.size(); ++i) {
+			if (categories[i] > max) {
+				max = categories[i];
+				maxIndex = static_cast<int>(i);
+			}
+		}
+		BOOST_ASSERT(max != 0.0f);
+		BOOST_ASSERT(maxIndex != -1);
+		// Zapisanie kategorii wiekszosciowej w wezle
+		queueHead.first->setCategory(static_cast<size_t>(maxIndex));
+		if (all == max) { // wszystkie przyklady jednej kategorii
+			queueHead.first->setMisclassifiedExamplesCount(0.0f); // wszystkie poprawnie klasyfikowane
+			delete queueHead.second; // usuniecie przykladow zwiazanych z wezlem
+			continue;
+		}
+		// Obliczenie i zapisanie liczby przykladow blednie klasyfikowanych
+		float misclassifiedCounter = 0.0f;
+		for (ListOfExamples::const_iterator iter = queueHead.second->begin();
+				iter != queueHead.second->end(); ++iter) {
+			if (table[iter->first][categoryIndex_]
+					!= static_cast<int>(queueHead.first->getCategory()))
+				misclassifiedCounter += iter->second;
+		}
+		queueHead.first->setMisclassifiedExamplesCount(misclassifiedCounter);
+		// Wybranie testu
+		size_t bestTest = 0;
+		//double maxInformationGain = 0.0;
+		// tymczasowo:
+		if (tempCounter == categoryIndex_)
+			++tempCounter;
+		bestTest = tempCounter;
+		++tempCounter;
+		for (size_t i = 0; i < attributesCount_; ++i) {
+			if (i == categoryIndex_) // nie testujemy kategorii
+				continue;
+			// TODO
+			// bez sensu liczyc informationGain dla wszystkich atrybutow
+			// bo w poddrzewie nie chcemy drugi raz uzywac tego samego testu
+			// trzeba jakos przekazac ktore testy zostaly wykonane lub jakie pozostaly
+		}
+
+#ifdef DEBUG
+		cout << "Wybrany test: " << attributes_[bestTest] << endl;
+#endif
+
+		queueHead.first->setTest(bestTest);
+		// Struktura na przyklady dla dzieci
+		size_t childrenCount = values_[bestTest].size(); // liczba dzieci
+		vector<ListOfExamples> childrenExamples = vector<ListOfExamples>(
+				childrenCount);
+
+#ifdef DEBUG
+		for (size_t i = 0; i < childrenExamples.size(); ++i) {
+			BOOST_ASSERT(childrenExamples[i].size() == 0);
+		}
+#endif
+
+		vector<float> weightSum = vector<float>(childrenCount, float(0.0f));
+		// Podzielenie przykladow ze znanymi wartosciami wybranego testu
+		for (ListOfExamples::iterator iter = queueHead.second->begin();
+				iter != queueHead.second->end();) {
+			int value = table[iter->first][bestTest];
+			if (value == -1) // nieznana wartosc
+				++iter;
+			else {
+				childrenExamples[value].push_back(
+						Example(iter->first, iter->second));
+				weightSum[value] += iter->second;
+				iter = queueHead.second->erase(iter);
+			}
+		}
+		// Podzielenie przykladow z nieznanymi wartosciami wybranego testu
+		for (ListOfExamples::const_iterator iter = queueHead.second->begin();
+				iter != queueHead.second->end(); ++iter) {
+			for (size_t i = 0; i < childrenExamples.size(); ++i) {
+				childrenExamples[i].push_back(
+						Example(iter->first,
+								iter->second * weightSum[i] / all));
+			}
+		}
+		// Dodanie do kolejki wszystkich dzieci z ich przykladami
+		vector<Node*> children = vector<Node*>(childrenCount, NULL);
+		for (size_t i = 0; i < childrenExamples.size(); ++i) {
+			if (0 == childrenExamples[i].size()) // nie bylo przykladu o tej wartosci atrybutu
+				continue;
+			children[i] = new Node(weightSum[i]);
+			ListOfExamples* e = new ListOfExamples(childrenExamples[i]);
+			q.push(NodeAndExamples(children[i], e));
+		}
+		// Ustawienie rodzicowi wskazan na dzieci
+		queueHead.first->setChildren(children);
+		// Usuniecie struktury przechowujacej informacje
+		// o przykladach zwiazanych z wezlem
+		delete queueHead.second;
 	}
+
+#ifdef DEBUG
+	cout << "Drzewo: " << endl;
+	printTree(root, 0);
+#endif
 }
 
 void DecisionTree::prune() {

@@ -5,9 +5,9 @@
 #ifndef TABLE_HPP_
 #define TABLE_HPP_
 
-#include "BadSizeException.hpp"
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 namespace id3lib {
 
@@ -21,12 +21,13 @@ public:
 	 * Tworzy pusta tabele o okreslonych atrybutach
 	 */
 	Table(const std::vector<std::string>& attr) :
-			attr_(attr), examples_() , columns_(attr.size()) {
+			attr_(attr), examples_(), columns_(attr.size()) {
 	}
 	/*
 	 * Dodaje przyklad na koniec kolekcji
 	 */
-	void pushBack(const std::vector<std::string>& x) throw(BadSizeException);
+	void pushBack(const std::vector<std::string>& x)
+			throw (std::invalid_argument);
 	/*
 	 * @return Nazwa atrybutu o podanym indeksie
 	 */

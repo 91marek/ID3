@@ -12,25 +12,32 @@ namespace id3lib {
 class Node {
 public:
 	/*
-	 * Tworzy wezel o danej kategorii i danej
-	 * liczbie przykladow z nim zwiazanych
+	 * Tworzy wezel o danej liczbie przykladow z nim zwiazanych
 	 */
-	Node(size_t category, size_t examplesCount) :
-			children_(std::vector<Node*>()), category_(category), examplesCount_(
-					examplesCount), misclassifiedExamplesCount_(0.0f), test_(0) {
+	Node(float examplesCount) :
+			children_(std::vector<Node*>()), category_(0), examplesCount_(
+					examplesCount), misclassifiedExamplesCount_(0.0f), test_(
+					0) {
 
 	}
 	/*
 	 * Wywoluje destruktor wszystkich dzieci
 	 */
 	~Node() {
-		size_t size = children_.size();
-		for (size_t i = 0; i < size; ++i)
+		for (size_t i = 0; i < children_.size(); ++i)
 			delete children_[i];
 	}
 
-	size_t getChildCount() const {
+	size_t getChildrenCount() const {
 		return children_.size();
+	}
+
+	const std::vector<Node*>& getChildren() const {
+		return children_;
+	}
+
+	void setChildren(const std::vector<Node*>& children) {
+		children_ = children;
 	}
 
 	Node* getChildAt(size_t i) const {
