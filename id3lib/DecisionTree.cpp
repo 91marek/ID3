@@ -9,6 +9,7 @@
 #endif
 
 #include "DecisionTree.hpp"
+#include "Example.hpp"
 #include <boost/shared_array.hpp>
 #include <boost/assert.hpp>
 #include <list>
@@ -120,7 +121,6 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 
 	// Utworzenie struktury przechowujacej informacje
 	// o przykladach zwiazanych z wezlem root
-	typedef pair<size_t, float> Example; // numer przykladu, waga
 	typedef list<Example> ListOfExamples; // lista par: numer przykladu, waga
 	ListOfExamples* e = new ListOfExamples();
 	for (size_t i = 0; i < examplesCount_; ++i)
@@ -130,7 +130,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 	BOOST_ASSERT(e->size() == examplesCount_);
 	for (ListOfExamples::const_iterator iter = e->begin(); iter != e->end();
 			++iter)
-		BOOST_ASSERT(iter->second == 1.0f);
+		BOOST_ASSERT(iter->weight == 1.0f);
 #endif
 
 	// Usuniecie biezacego drzewa
@@ -162,8 +162,8 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		float all = 0.0f; // suma wag wszystkich przykladow
 		for (ListOfExamples::const_iterator iter = queueHead.second->begin();
 				iter != queueHead.second->end(); ++iter) {
-			categories[table[iter->first][categoryIndex_]] += iter->second;
-			all += iter->second;
+			categories[table[iter->number][categoryIndex_]] += iter->weight;
+			all += iter->weight;
 		}
 		// Wybranie kategorii wiekszosciowej
 		float max = 0.0f;
@@ -187,9 +187,9 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		float misclassifiedCounter = 0.0f;
 		for (ListOfExamples::const_iterator iter = queueHead.second->begin();
 				iter != queueHead.second->end(); ++iter) {
-			if (table[iter->first][categoryIndex_]
+			if (table[iter->number][categoryIndex_]
 					!= static_cast<int>(queueHead.first->getCategory()))
-				misclassifiedCounter += iter->second;
+				misclassifiedCounter += iter->weight;
 		}
 		queueHead.first->setMisclassifiedExamplesCount(misclassifiedCounter);
 		// Wybranie testu
@@ -229,13 +229,13 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		// Podzielenie przykladow ze znanymi wartosciami wybranego testu
 		for (ListOfExamples::iterator iter = queueHead.second->begin();
 				iter != queueHead.second->end();) {
-			int value = table[iter->first][bestTest];
+			int value = table[iter->number][bestTest];
 			if (value == -1) // nieznana wartosc
 				++iter;
 			else {
 				childrenExamples[value].push_back(
-						Example(iter->first, iter->second));
-				weightSum[value] += iter->second;
+						Example(iter->number, iter->weight));
+				weightSum[value] += iter->weight;
 				iter = queueHead.second->erase(iter);
 			}
 		}
@@ -244,8 +244,8 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 				iter != queueHead.second->end(); ++iter) {
 			for (size_t i = 0; i < childrenExamples.size(); ++i) {
 				childrenExamples[i].push_back(
-						Example(iter->first,
-								iter->second * weightSum[i] / all));
+						Example(iter->number,
+								iter->weight * weightSum[i] / all));
 			}
 		}
 		// Dodanie do kolejki wszystkich dzieci z ich przykladami
