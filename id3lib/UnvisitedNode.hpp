@@ -15,7 +15,7 @@ typedef std::list<size_t> ListOfTests;
 
 class UnvisitedNode {
 public:
-	UnvisitedNode(Node* n, ListOfExamples* e, ListOfTests* t) :
+	UnvisitedNode(Node* n, ListOfExamples* e, ListOfTests* t = NULL) :
 			node(n), examples(e), tests(t) {
 
 	}

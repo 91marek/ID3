@@ -22,37 +22,43 @@ int main() {
 	attributes.push_back("play");
 	Table examples = Table(attributes);
 	vector<string> ex0 = vector<string>();
-	ex0.push_back("sunny");
+//	ex0.push_back("sunny");
+	ex0.push_back("?");
 	ex0.push_back("hot");
 	ex0.push_back("high");
 	ex0.push_back("normal");
 	ex0.push_back("no");
 	vector<string> ex1 = vector<string>();
-	ex1.push_back("sunny");
+//	ex1.push_back("sunny");
+	ex1.push_back("?");
 	ex1.push_back("hot");
 	ex1.push_back("high");
 	ex1.push_back("high");
 	ex1.push_back("no");
 	vector<string> ex2 = vector<string>();
-	ex2.push_back("overcast");
+//	ex2.push_back("overcast");
+	ex2.push_back("?");
 	ex2.push_back("hot");
 	ex2.push_back("high");
 	ex2.push_back("normal");
 	ex2.push_back("yes");
 	vector<string> ex3 = vector<string>();
-	ex3.push_back("rainy");
+//	ex3.push_back("rainy");
+	ex3.push_back("?");
 	ex3.push_back("mild");
 	ex3.push_back("high");
 	ex3.push_back("normal");
 	ex3.push_back("yes");
 	vector<string> ex4 = vector<string>();
-	ex4.push_back("rainy");
+//	ex4.push_back("rainy");
+	ex4.push_back("?");
 	ex4.push_back("cold");
 	ex4.push_back("normal");
 	ex4.push_back("normal");
 	ex4.push_back("yes");
 	vector<string> ex5 = vector<string>();
-	ex5.push_back("rainy");
+//	ex5.push_back("rainy");
+	ex5.push_back("?");
 	ex5.push_back("cold");
 	ex5.push_back("normal");
 	ex5.push_back("high");
@@ -74,6 +80,18 @@ int main() {
 #endif
 	DecisionTree dt = DecisionTree();
 	dt.build(examples, 4, "?");
+	vector<string> categories = dt.classify(examples);
+	cout << "Wynik klasyfikacji:" << endl;
+	for (size_t i = 0; i < categories.size(); ++i) {
+		string before = examples.getValueAt(i, 4);
+		string after = categories[i];
+		cout << "pierwotnie: " << before << " wynik: " << after;
+		if (!(before == after))
+			cout << " INACZEJ";
+		else
+			cout << " TAK SAMO";
+		cout << endl;
+	}
 	cout << "Good Bye ID3!" << endl;
 	return 0;
 }
