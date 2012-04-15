@@ -79,22 +79,22 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 
 	// Mapowanie stringow na int
 	// oraz zapamietywanie wystepujacych wartosci atrybutow
-	for (int y = 0; y < static_cast<int>(attributesCount_); ++y) {
-		for (int x = 0; x < static_cast<int>(examplesCount_); ++x) {
+	for (size_t y = 0; y < attributesCount_; ++y) {
+		for (size_t x = 0; x < examplesCount_; ++x) {
 			if (examples.getValueAt(x, y) == missingValueMark_) {
 				table[x][y] = -1; // -1 dla brakujacych wartosci
 				continue;
 			}
-			int k = 0;
-			for (; k < static_cast<int>(values_[y].size()); ++k) { // sprawdzenie czy taka wartosc juz wystapila
+			size_t k = 0;
+			for (; k < values_[y].size(); ++k) { // sprawdzenie czy taka wartosc juz wystapila
 				if (examples.getValueAt(x, y) == values_[y][k])
 					break;
 			}
-			if (k < static_cast<int>(values_[y].size())) // taka wartosc juz wystapila
-				table[x][y] = k;
+			if (k < values_[y].size()) // taka wartosc juz wystapila
+				table[x][y] = static_cast<int>(k);
 			else { // zapamietanie nowej wartosci
 				values_[y].push_back(examples.getValueAt(x, y));
-				table[x][y] = values_[y].size() - 1;
+				table[x][y] = static_cast<int>(values_[y].size()) - 1;
 			}
 		}
 	}
@@ -163,20 +163,24 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 				0.0f);
 		for (ListOfExamples::const_iterator iter = queueHead.examples->begin();
 				iter != queueHead.examples->end(); ++iter) {
-			categories[table[iter->number][categoryIndex_]] += iter->weight;
+#ifdef DEBUG
+			BOOST_ASSERT(table[iter->number][categoryIndex_] >= 0);
+#endif
+			size_t index =
+					static_cast<size_t>(table[iter->number][categoryIndex_]);
+			categories[index] += iter->weight;
 		}
 		// Wybranie kategorii wiekszosciowej
 		float max = 0.0f;
-		int maxIndex = -1;
+		size_t maxIndex = 0;
 		for (size_t i = 0; i < categories.size(); ++i) {
 			if (categories[i] > max) {
 				max = categories[i];
-				maxIndex = static_cast<int>(i);
+				maxIndex = i;
 			}
 		}
 #ifdef DEBUG
 		BOOST_ASSERT(max != 0.0f);
-		BOOST_ASSERT(maxIndex >= 0);
 #endif
 		// Zapisanie kategorii wiekszosciowej w wezle
 		queueHead.node->setCategory(maxIndex);
@@ -190,7 +194,10 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		float misclassifiedCounter = 0.0f;
 		for (ListOfExamples::const_iterator iter = queueHead.examples->begin();
 				iter != queueHead.examples->end(); ++iter) {
-			if (table[iter->number][categoryIndex_]
+#ifdef DEBUG
+			BOOST_ASSERT(table[iter->number][categoryIndex_] >= 0);
+#endif
+			if (static_cast<size_t>(table[iter->number][categoryIndex_])
 					!= queueHead.node->getCategory())
 				misclassifiedCounter += iter->weight;
 		}
@@ -242,7 +249,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 			if (value == -1) // nieznana wartosc
 				++iter;
 			else {
-				childrenExamples[value]->pushBack(
+				childrenExamples[static_cast<size_t>(value)]->pushBack(
 						Example(iter->number, iter->weight));
 				iter = queueHead.examples->erase(iter);
 			}
