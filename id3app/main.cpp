@@ -7,7 +7,6 @@
 #include <iostream>
 #include <id3lib/DecisionTree.hpp>
 #include <id3lib/Table.hpp>
-#include <boost/assert.hpp>
 
 using namespace std;
 using namespace id3lib;

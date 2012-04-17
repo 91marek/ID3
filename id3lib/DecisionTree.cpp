@@ -6,7 +6,7 @@
 
 #ifdef DEBUG
 #include <iostream>
-#include <boost/assert.hpp>
+#include <cassert>
 #endif
 
 #include "DecisionTree.hpp"
@@ -49,7 +49,7 @@ void testTree(Node* node) {
 			sum += child->getExamplesCount();
 	}
 	cout << "sumaOdDzieci=" << sum << " rodzic=" << node->getExamplesCount() << endl;
-	BOOST_ASSERT(sum == node->getExamplesCount());	// (a-b<e) ???
+	assert(sum == node->getExamplesCount());	// (a-b<e) ???
 	for (size_t i = 0; i < node->getChildrenCount(); ++i)
 		testTree(node->getChildAt(i));
 }
@@ -144,11 +144,11 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		e->pushBack(Example(i, 1.0f));
 
 #ifdef DEBUG
-	BOOST_ASSERT(e->size() == examplesCount_);
-	BOOST_ASSERT(e->weightSum() == static_cast<float>(examplesCount_));
+	assert(e->size() == examplesCount_);
+	assert(e->weightSum() == static_cast<float>(examplesCount_));
 	for (ListOfExamples::const_iterator iter = e->begin(); iter != e->end();
 			++iter)
-		BOOST_ASSERT(iter->weight == 1.0f);
+		assert(iter->weight == 1.0f);
 #endif
 
 	// Utworzenie listy dotychczas niewykorzystanych testow
@@ -158,7 +158,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 			t->push_back(i);
 
 #ifdef DEBUG
-	BOOST_ASSERT(t->size() == attributesCount_ - 1);
+	assert(t->size() == attributesCount_ - 1);
 #endif
 
 	// Usuniecie biezacego drzewa
@@ -171,7 +171,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 	q.push(UnvisitedNode(root, e, t));
 
 #ifdef DEBUG
-	BOOST_ASSERT(q.size() == 1);
+	assert(q.size() == 1);
 #endif
 
 	// Przetwarzanie drzewa wszerz
@@ -179,7 +179,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		UnvisitedNode queueHead = q.front();
 		q.pop();
 #ifdef DEBUG
-		BOOST_ASSERT(queueHead.node->getExamplesCount() == queueHead.examples->weightSum());
+		assert(queueHead.node->getExamplesCount() == queueHead.examples->weightSum());
 #endif
 		// Zliczenie sumy wag przykladow dla poszczegolnych kategorii
 		vector<float> categories = vector<float>(values_[categoryIndex_].size(),
@@ -187,7 +187,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		for (ListOfExamples::const_iterator iter = queueHead.examples->begin();
 				iter != queueHead.examples->end(); ++iter) {
 #ifdef DEBUG
-			BOOST_ASSERT(table[iter->number][categoryIndex_] >= 0);
+			assert(table[iter->number][categoryIndex_] >= 0);
 #endif
 			size_t index =
 					static_cast<size_t>(table[iter->number][categoryIndex_]);
@@ -203,7 +203,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 			}
 		}
 #ifdef DEBUG
-		BOOST_ASSERT(max != 0.0f);
+		assert(max != 0.0f);
 #endif
 		// Zapisanie kategorii wiekszosciowej w wezle
 		queueHead.node->setCategory(maxIndex);
@@ -213,7 +213,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		for (ListOfExamples::const_iterator iter = queueHead.examples->begin();
 				iter != queueHead.examples->end(); ++iter) {
 #ifdef DEBUG
-			BOOST_ASSERT(table[iter->number][categoryIndex_] >= 0);
+			assert(table[iter->number][categoryIndex_] >= 0);
 #endif
 			if (static_cast<size_t>(table[iter->number][categoryIndex_])
 					!= queueHead.node->getCategory())
@@ -251,7 +251,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		queueHead.tests->erase(bestTestIterator);
 
 #ifdef DEBUG
-		BOOST_ASSERT(testCount - 1 == queueHead.tests->size());
+		assert(testCount - 1 == queueHead.tests->size());
 		cout << "Wybrany test: " << attributes_[bestTest] << endl;
 #endif
 
@@ -267,10 +267,10 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		// vector<ListOfExamples*> childrenExamples = vector<ListOfExamples*>(childrenCount, new ListOfExamples());
 		// i nie dzialalo!!! Tworzona byla jedna lista a wskazanie do niej bylo kopiowane childrenCount razy!!!
 #ifdef DEBUG
-		BOOST_ASSERT(childrenExamples.size() == childrenCount);
+		assert(childrenExamples.size() == childrenCount);
 		for (size_t i = 0; i < childrenExamples.size(); ++i) {
-			BOOST_ASSERT(childrenExamples[i]->size() == 0);
-			BOOST_ASSERT(childrenExamples[i]->weightSum() == 0.0f);
+			assert(childrenExamples[i]->size() == 0);
+			assert(childrenExamples[i]->weightSum() == 0.0f);
 		}
 		float exCount = queueHead.examples->weightSum();
 #endif
@@ -297,10 +297,10 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		for (size_t i = 0; i < multipliers.size(); ++i) {
 			multipliersSum += multipliers[i];
 		}
-		BOOST_ASSERT(multipliersSum == 1.0f);
+		assert(multipliersSum == 1.0f);
 		if (exCount == queueHead.examples->weightSum()) {
 			for (size_t i = 0; i < multipliers.size(); ++i) {
-				BOOST_ASSERT(multipliers[i] == 0.0f);
+				assert(multipliers[i] == 0.0f);
 			}
 		}
 #endif
@@ -330,7 +330,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 			ListOfTests* childrenTests = new ListOfTests();
 			*childrenTests = *(queueHead.tests);	// gleboka kopia
 #ifdef DEBUG
-			BOOST_ASSERT(childrenTests != queueHead.tests);	// porownanie wskaznikow
+			assert(childrenTests != queueHead.tests);	// porownanie wskaznikow
 #endif
 			q.push(UnvisitedNode(children[i], childrenExamples[i], childrenTests));
 		}
@@ -433,8 +433,8 @@ vector<string> DecisionTree::classify(const Table& examples) const {
 			// jest kategoria wyznaczona dla tego liscia
 			float multiplier = (all - incorrect) / all;
 #ifdef DEBUG
-						BOOST_ASSERT(multiplier <= 1.0f);
-						BOOST_ASSERT(multiplier > 0.0f);
+						assert(multiplier <= 1.0f);
+						assert(multiplier > 0.0f);
 #endif
 			size_t leafCategory = queueHead.node->getCategory();	// kategoria liscia
 			// Zwiekszenie prawdopodobienstwa dla wszystkich przykladow zwiazanych z lisciem
@@ -465,8 +465,8 @@ vector<string> DecisionTree::classify(const Table& examples) const {
 					if (child != NULL) {
 						float multiplier = child->getExamplesCount() / queueHead.node->getExamplesCount();
 #ifdef DEBUG
-						BOOST_ASSERT(multiplier <= 1.0f);
-						BOOST_ASSERT(multiplier > 0.0f);
+						assert(multiplier <= 1.0f);
+						assert(multiplier > 0.0f);
 #endif
 						childrenExamples[i]->pushBack(Example(iter->number, iter->weight * multiplier));
 					}
@@ -492,7 +492,7 @@ vector<string> DecisionTree::classify(const Table& examples) const {
 			cout << probability[i][j] << " ";
 		}
 		cout << endl;
-		BOOST_ASSERT(probabilitySum <= 1.0f);
+		assert(probabilitySum <= 1.0f);
 	}
 #endif
 	// Wybranie najbardziej prawdopodobnej kategorii dla kazdego z przykladow
@@ -507,7 +507,7 @@ vector<string> DecisionTree::classify(const Table& examples) const {
 			}
 		}
 #ifdef DEBUG
-		BOOST_ASSERT(max != 0.0f);
+		assert(max != 0.0f);
 #endif
 		categories[i] = values_[categoryIndex_][maxIndex];
 	}
