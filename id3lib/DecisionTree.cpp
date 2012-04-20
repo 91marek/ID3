@@ -369,15 +369,15 @@ void DecisionTree::prune(const Table& examples) {
 vector<string> DecisionTree::classify(const Table& examples) const {
 	// Sprawdzenie poprawnosci stanu obiektu
 	if (NULL == root)
-		throw logic_error("Classifier is not built.");
+		throw logic_error("Decision tree must be built to classify examples.");
 	// Sprawdzenie poprawnosci parametru
 	if (examples.columns() != attributesCount_)
 		throw invalid_argument(
-				"Classifier has different number of attributes than examples to classify.");
+				"Examples to classify must have the same number of attributes as decision tree.");
 	for (size_t i = 0; i < examples.columns(); ++i)
 		if (!(attributes_[i] == examples.getAttrAt(i)))
 			throw invalid_argument(
-					"Classifier has different names of attributes than examples to classify.");
+					"Examples to classify must have the same names of attributes as decision tree.");
 
 	// Utworzenie tablicy na przyklady
 	shared_array<shared_array<int> > table(
@@ -428,13 +428,16 @@ vector<string> DecisionTree::classify(const Table& examples) const {
 		q.pop();
 		if (queueHead.node->isLeaf()) {	// odwiedzony wezel jest lisciem
 			float all = queueHead.node->getExamplesCount();
+#ifdef DEBUG
+			assert(all != 0.0f);
+#endif
 			float incorrect = queueHead.node->getMisclassifiedExamplesCount();
 			// Obliczenie prawdopodobienstwa ze kategoria przykladu zaliczonego do tego liscia
 			// jest kategoria wyznaczona dla tego liscia
 			float multiplier = (all - incorrect) / all;
 #ifdef DEBUG
-						assert(multiplier <= 1.0f);
-						assert(multiplier > 0.0f);
+			assert(multiplier <= 1.0f);
+			assert(multiplier > 0.0f);
 #endif
 			size_t leafCategory = queueHead.node->getCategory();	// kategoria liscia
 			// Zwiekszenie prawdopodobienstwa dla wszystkich przykladow zwiazanych z lisciem
