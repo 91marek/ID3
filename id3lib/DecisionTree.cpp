@@ -352,18 +352,24 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 #endif
 }
 
-void DecisionTree::prune() {
+void DecisionTree::minimumErrorPrunning() {
+	// Sprawdzenie poprawnosci stanu obiektu
+	if (NULL == root)
+		throw logic_error("Decision tree must be built to prune.");
+
+	recursiveMEP(root);
 	// TODO
 	// pamietac aby zamieniajac wezel na lisc podmieniac vector wskazan
 	// na dzieci na pusty vector (patrz metoda Node::isLeaf())
-	return;
 }
 
 void DecisionTree::prune(const Table& examples) {
+	// Sprawdzenie poprawnosci stanu obiektu
+	if (NULL == root)
+		throw logic_error("Decision tree must be built to prune.");
 	// TODO
 	// pamietac aby zamieniajac wezel na lisc podmieniac vector wskazan
 	// na dzieci na pusty vector (patrz metoda Node::isLeaf())
-	return;
 }
 
 vector<string> DecisionTree::classify(const Table& examples) const {
@@ -516,4 +522,29 @@ vector<string> DecisionTree::classify(const Table& examples) const {
 	}
 	// Zwrocenie najbardziej prawdopodobnej kategorii dla kazdego z przykladow
 	return categories;
+}
+
+float DecisionTree::recursiveMEP(Node* node) {
+	float k = static_cast<float>(values_[categoryIndex_].size());	// liczba kategorii
+	float nodeErrorRate = (node->getMisclassifiedExamplesCount() + k - 1)
+			/ (node->getExamplesCount() + k);	// MEP error rate
+
+	if (node->isLeaf())
+		return nodeErrorRate;
+
+	float subtreeErrorRate = 0.0f;
+	for (size_t i = 0; i < node->getChildrenCount(); ++i) {
+		Node* child = node->getChildAt(i);
+		if (child != NULL) {
+			float multiplier = child->getExamplesCount() / node->getExamplesCount();
+			subtreeErrorRate += (multiplier * recursiveMEP(child));
+		}
+	}
+
+	if (nodeErrorRate < subtreeErrorRate) {
+		node->makeLeaf();
+		return nodeErrorRate;
+	}
+
+	return subtreeErrorRate;
 }

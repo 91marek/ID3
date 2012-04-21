@@ -32,9 +32,9 @@ public:
 	void build(const Table& examples, size_t categoryIndex,
 			const std::string& missingValueMark) throw (std::invalid_argument);
 	/*
-	 * Przycina drzewo na podstawie zbioru trenujacego
+	 * Przycina drzewo metoda Minimum Error Prunning
 	 */
-	void prune();
+	void minimumErrorPrunning();
 	/*
 	 * Przycina drzewo na podstawie zadanych przykladow
 	 */
@@ -102,6 +102,8 @@ protected:
 	 * Wskazanie na korzen drzewa decyzyjnego
 	 */
 	Node* root;
+
+	float recursiveMEP(Node* node);
 };
 
 } /* namespace id3lib */

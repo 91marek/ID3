@@ -31,20 +31,12 @@ public:
 		return children_.size();
 	}
 
-	const std::vector<Node*>& getChildren() const {
-		return children_;
-	}
-
-	void setChildren(const std::vector<Node*>& children) {
-		children_ = children;
-	}
-
 	Node* getChildAt(size_t i) const {
 		return children_[i];
 	}
 
-	void setChildAt(Node* child, size_t i) {
-		children_[i] = child;
+	void setChildren(const std::vector<Node*>& children) {
+		children_ = children;
 	}
 
 	size_t getCategory() const {
@@ -77,6 +69,10 @@ public:
 
 	bool isLeaf() const {
 		return 0 == children_.size();
+	}
+
+	void makeLeaf() {
+		children_ = std::vector<Node*>();
 	}
 protected:
 	/*
