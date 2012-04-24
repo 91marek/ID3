@@ -23,10 +23,6 @@ public:
 	 */
 	DecisionTree();
 	/*
-	 * Niszczy drzewo decyzyjne
-	 */
-	~DecisionTree();
-	/*
 	 * Buduje drzewo decyzyjne na podstawie przykladow
 	 */
 	void build(const Table& examples, size_t categoryIndex,
@@ -34,15 +30,23 @@ public:
 	/*
 	 * Przycina drzewo metoda Minimum Error Prunning
 	 */
-	void minimumErrorPrunning();
+	void minimumErrorPrunning() throw (std::logic_error);
 	/*
 	 * Przycina drzewo na podstawie zadanych przykladow
 	 */
-	void prune(const Table& examples);
+	void reducedErrorPrunning(const Table& examples) throw (std::logic_error);
 	/*
 	 * Klasyfikuje zadane przyklady
 	 */
-	std::vector<std::string> classify(const Table& examples) const;
+	std::vector<std::string> classify(const Table& examples) const
+			throw (std::logic_error, std::invalid_argument);
+	/*
+	 * @return Nazwy atrybutow zbioru trenujacego
+	 * na podstawie ktorego drzewo zostalo utworzone
+	 */
+	const std::vector<std::string>& getAttributes() const {
+		return attributes_;
+	}
 	/*
 	 * @return Liczba atrybutow zbioru trenujacego
 	 * na podstawie ktorego drzewo zostalo utworzone
@@ -101,9 +105,9 @@ protected:
 	/*
 	 * Wskazanie na korzen drzewa decyzyjnego
 	 */
-	Node* root;
+	PNode root;
 
-	float recursiveMEP(Node* node);
+	float recursiveMEP(PNode node);
 };
 
 } /* namespace id3lib */

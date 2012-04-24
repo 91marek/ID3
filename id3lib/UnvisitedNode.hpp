@@ -8,29 +8,33 @@
 #include "Node.hpp"
 #include "ListOfExamples.hpp"
 #include <list>
+#include <boost/shared_ptr.hpp>
 
 namespace id3lib {
 
+typedef boost::shared_ptr<ListOfExamples> PListOfExamples;
+
 typedef std::list<size_t> ListOfTests;
+typedef boost::shared_ptr<ListOfTests> PListOfTests;
 
 class UnvisitedNode {
 public:
-	UnvisitedNode(Node* n, ListOfExamples* e, ListOfTests* t = NULL) :
+	UnvisitedNode(PNode n, PListOfExamples e, PListOfTests t = PListOfTests()) :
 			node(n), examples(e), tests(t) {
 
 	}
 	/*
 	 * Wezel
 	 */
-	Node* const node;
+	const PNode node;
 	/*
 	 * Przyklady zwiazane z wezlem
 	 */
-	ListOfExamples* const examples;
+	const PListOfExamples examples;
 	/*
 	 * Niewykorzystane testy
 	 */
-	ListOfTests* const tests;
+	const PListOfTests tests;
 };
 
 } /* namespace id3lib */

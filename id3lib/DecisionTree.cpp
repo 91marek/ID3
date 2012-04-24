@@ -6,14 +6,13 @@
 
 #ifdef DEBUG
 #include <iostream>
-#include <cassert>
+#include <boost/assert.hpp>
 #endif
 
 #include "DecisionTree.hpp"
-#include "Example.hpp"
-#include "ListOfExamples.hpp"
 #include "UnvisitedNode.hpp"
 #include <boost/shared_array.hpp>
+#include <boost/shared_ptr.hpp>
 #include <queue>
 
 using namespace id3lib;
@@ -21,7 +20,7 @@ using namespace std;
 using namespace boost;
 
 #ifdef DEBUG
-void printTree(Node* node, size_t depth) {
+void printTree(PNode node, size_t depth) {
 	for (size_t i = 0; i < depth; ++i)
 		cout << "*******";
 	if (!node->isLeaf())
@@ -30,13 +29,13 @@ void printTree(Node* node, size_t depth) {
 		cout << "LEAF c:" << node->getCategory() << endl;
 	size_t new_depth = ++depth;
 	for (size_t i = 0; i < node->getChildrenCount(); ++i) {
-		Node* child = node->getChildAt(i);
+		PNode child(node->getChildAt(i));
 		if (child != NULL)
 			printTree(child, new_depth);
 	}
 }
 
-void testTree(Node* node) {
+void testTree(PNode node) {
 	if (NULL == node)
 		return;
 	if (node->isLeaf())
@@ -44,26 +43,21 @@ void testTree(Node* node) {
 	cout << "t:" << node->getTest() << " c:" << node->getCategory() << " ";
 	float sum = 0.0f;
 	for (size_t i = 0; i < node->getChildrenCount(); ++i) {
-		Node* child = node->getChildAt(i);
+		PNode child(node->getChildAt(i));
 		if (NULL != child)
 			sum += child->getExamplesCount();
 	}
 	cout << "sumaOdDzieci=" << sum << " rodzic=" << node->getExamplesCount() << endl;
-	assert(sum == node->getExamplesCount());	// (a-b<e) ???
+	BOOST_ASSERT(sum == node->getExamplesCount());	// (a-b<e) ???
 	for (size_t i = 0; i < node->getChildrenCount(); ++i)
 		testTree(node->getChildAt(i));
 }
 #endif
 
 DecisionTree::DecisionTree() :
-		values_(vector<vector<string> >()), attributes_(vector<string>()), examplesCount_(
-				0), attributesCount_(0), categoryIndex_(0), missingValueMark_(
-				""), root(NULL) {
+		values_(vector<vector<string> >()), attributes_(vector<string>()), examplesCount_(0),
+		attributesCount_(0), categoryIndex_(0), missingValueMark_(""), root() {
 
-}
-
-DecisionTree::~DecisionTree() {
-	delete root;
 }
 
 void DecisionTree::build(const Table& examples, size_t categoryIndex,
@@ -76,7 +70,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		throw invalid_argument(
 				"Table must have 1 or more rows (1 or more examples).");
 	if (categoryIndex >= examples.columns()) // nie ma tylu kolumn w zbiorze przykladow
-		throw out_of_range("Index of category column is out of bounds.");
+		throw invalid_argument("Index of category column is out of bounds.");
 	// jezeli to sprawdzenie zostanie wykonane pozniej to obiekt moze pozostac
 	// w stanie nieustalonym na skutek rzucenia wyjatku
 	// (degeneracja dotychczas zbudowanego drzewa == bledy przy klasyfikacji)
@@ -93,8 +87,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 	missingValueMark_ = missingValueMark;
 
 	// Utworzenie tablicy na przyklady
-	shared_array<shared_array<int> > table(
-			new shared_array<int> [examplesCount_]);
+	shared_array<shared_array<int> > table(new shared_array<int> [examplesCount_]);
 	for (size_t i = 0; i < examplesCount_; ++i)
 		table[i] = shared_array<int>(new int[attributesCount_]);
 
@@ -139,39 +132,36 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 #endif
 
 	// Utworzenie listy przykladow zwiazanych z wezlem root
-	ListOfExamples* e = new ListOfExamples();
+	PListOfExamples e(new ListOfExamples());
 	for (size_t i = 0; i < examplesCount_; ++i)
 		e->pushBack(Example(i, 1.0f));
 
 #ifdef DEBUG
-	assert(e->size() == examplesCount_);
-	assert(e->weightSum() == static_cast<float>(examplesCount_));
-	for (ListOfExamples::const_iterator iter = e->begin(); iter != e->end();
-			++iter)
-		assert(iter->weight == 1.0f);
+	BOOST_ASSERT(e->size() == examplesCount_);
+	BOOST_ASSERT(e->weightSum() == static_cast<float>(examplesCount_));
+	for (ListOfExamples::const_iterator iter = e->begin(); iter != e->end(); ++iter)
+		BOOST_ASSERT(iter->weight == 1.0f);
 #endif
 
 	// Utworzenie listy dotychczas niewykorzystanych testow
-	ListOfTests* t = new ListOfTests();
+	PListOfTests t(new ListOfTests());
 	for (size_t i = 0; i < attributesCount_; ++i)
 		if (i != categoryIndex_) // nie testujemy kategorii
 			t->push_back(i);
 
 #ifdef DEBUG
-	assert(t->size() == attributesCount_ - 1);
+	BOOST_ASSERT(t->size() == attributesCount_ - 1);
 #endif
 
-	// Usuniecie biezacego drzewa
-	delete root;
-	// Utworzenie wezla root
-	root = new Node(e->weightSum());
+	// Utworzenie nowego drzewa
+	root.reset(new Node(e->weightSum()));
 
 	// Dodanie do kolejki nieodwiedzonych wezlow wezla root
 	queue<UnvisitedNode> q = queue<UnvisitedNode>();
 	q.push(UnvisitedNode(root, e, t));
 
 #ifdef DEBUG
-	assert(q.size() == 1);
+	BOOST_ASSERT(q.size() == 1);
 #endif
 
 	// Przetwarzanie drzewa wszerz
@@ -179,7 +169,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		UnvisitedNode queueHead = q.front();
 		q.pop();
 #ifdef DEBUG
-		assert(queueHead.node->getExamplesCount() == queueHead.examples->weightSum());
+		BOOST_ASSERT(queueHead.node->getExamplesCount() == queueHead.examples->weightSum());
 #endif
 		// Zliczenie sumy wag przykladow dla poszczegolnych kategorii
 		vector<float> categories = vector<float>(values_[categoryIndex_].size(),
@@ -187,10 +177,10 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		for (ListOfExamples::const_iterator iter = queueHead.examples->begin();
 				iter != queueHead.examples->end(); ++iter) {
 #ifdef DEBUG
-			assert(table[iter->number][categoryIndex_] >= 0);
+			cout << "wypis: " << table[iter->number][categoryIndex_] << endl;
+			BOOST_ASSERT(table[iter->number][categoryIndex_] >= 0);
 #endif
-			size_t index =
-					static_cast<size_t>(table[iter->number][categoryIndex_]);
+			size_t index = static_cast<size_t>(table[iter->number][categoryIndex_]);
 			categories[index] += iter->weight;
 		}
 		// Wybranie kategorii wiekszosciowej
@@ -203,7 +193,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 			}
 		}
 #ifdef DEBUG
-		assert(max != 0.0f);
+		BOOST_ASSERT(max != 0.0f);
 #endif
 		// Zapisanie kategorii wiekszosciowej w wezle
 		queueHead.node->setCategory(maxIndex);
@@ -213,7 +203,7 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		for (ListOfExamples::const_iterator iter = queueHead.examples->begin();
 				iter != queueHead.examples->end(); ++iter) {
 #ifdef DEBUG
-			assert(table[iter->number][categoryIndex_] >= 0);
+			BOOST_ASSERT(table[iter->number][categoryIndex_] >= 0);
 #endif
 			if (static_cast<size_t>(table[iter->number][categoryIndex_])
 					!= queueHead.node->getCategory())
@@ -224,125 +214,110 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 		// Sprawdzenie kryterium stopu
 		if (0.0f == queueHead.node->getMisclassifiedExamplesCount() ||	// wszystkie przyklady jednej kategorii
 				0 == queueHead.tests->size()) {	// lub koniec testow
-			delete queueHead.examples; // usuniecie przykladow zwiazanych z wezlem
-			delete queueHead.tests; // usuniecie niewykorzystanych testow
 			continue;
 		}
-		// Wybranie testu
-		size_t bestTest = 0;
-		double maxInformationGain = 0.0;
-		ListOfTests::iterator bestTestIterator = queueHead.tests->begin();
-#ifdef DEBUG
-		size_t testCount = queueHead.tests->size();
-#endif
+
+		cout << "Wybranie testu:" << endl;
+		// Wybranie testu + podzial przykladow
+		bool firstTime = true;
+		size_t bestTest;
+		double maxInformationGain;
+		ListOfTests::iterator bestTestIterator;
+
+		typedef vector<PListOfExamples> ExamplesForChildren;
+		typedef shared_ptr<ExamplesForChildren> PExamplesForChildren;
+		PExamplesForChildren saved;
+
 		for (ListOfTests::iterator iter = queueHead.tests->begin();
 				iter != queueHead.tests->end(); ++iter) {
-			double informationGain = 0.0;
-			// TODO obliczyc informationGain dla testu wskazywanego przez iter
-			// tymczasowo:
-			informationGain = *iter; // pozniej to wywalic!
-			// TODO a co jesli nie bedzie przykladow ze znanymi wartosciami wybranego testu?
-			if (informationGain > maxInformationGain) {
-				maxInformationGain = informationGain;
-				bestTest = *iter;
-				bestTestIterator = iter;
+			cout << "Poczatek petli" << endl;
+			// Utworzenie struktury na przyklady dla dzieci
+			size_t childrenCount = values_[*iter].size(); // liczba dzieci
+			PExamplesForChildren current = PExamplesForChildren(new ExamplesForChildren(childrenCount));
+			for (size_t i = 0; i < current->size(); ++i)
+				(*current)[i].reset(new ListOfExamples);
+
+			cout << "kopiowanie przykladow zwiazanych z przetwarzanym wezlem" << endl;
+			// glebokie kopiowanie przykladow zwiazanych z aktualnie przetwarzanym wezlem
+			ListOfExamples currentExamples(*(queueHead.examples));
+
+			cout << "podzielenie znanych przykladow" << endl;
+			// Podzielenie przykladow ze znanymi wartosciami wybranego testu
+			for (ListOfExamples::iterator i = currentExamples.begin(); i != currentExamples.end();) {
+				int value = table[i->number][*iter];
+				if (value == -1) // nieznana wartosc
+					++i;
+				else {
+					(*current)[static_cast<size_t>(value)]->pushBack(Example(i->number, i->weight));
+					i = currentExamples.erase(i);
+				}
 			}
-		}
-		queueHead.tests->erase(bestTestIterator);
 
+			cout << "wyznaczenie mnoznikow" << endl;
+			// Wyznaczenie mnoznikow
+			vector<float> multipliers = vector<float>(childrenCount, float(0.0f));
+			float alreadySplitted = queueHead.node->getExamplesCount() - currentExamples.weightSum();
+			for (size_t i = 0; i < multipliers.size(); ++i) {
+				multipliers[i] = (*current)[i]->weightSum() / alreadySplitted;
+			}
+
+			cout << "podzielenie nieznanych przykladow" << endl;
+			// Podzielenie przykladow z nieznanymi wartosciami wybranego testu
+			// jesli sa wylacznie przyklady z nieznanymi wartosciami to nie zostana podzielone
+			for (ListOfExamples::const_iterator i = currentExamples.begin();
+					i != currentExamples.end(); ++i) {
+				for (size_t j = 0; j < current->size(); ++j) {
+					if (0 == (*current)[j]->size()) // nie bylo przykladu o tej wartosci atrybutu
+						continue;
+					(*current)[j]->pushBack(Example(i->number, i->weight * multipliers[j]));
+				}
+			}
+
+			double informationGain = 0.0;
+			informationGain = *iter;	// TODO wywalic to pozniej! tymczasowe
+
+
+			if (firstTime || informationGain > maxInformationGain) {
+				cout << "Zmiana maxInformationGain" << endl;
+				firstTime = false;
+				bestTest = *iter;
+				maxInformationGain = informationGain;
+				bestTestIterator = iter;
+				saved = current;
 #ifdef DEBUG
-		assert(testCount - 1 == queueHead.tests->size());
-		cout << "Wybrany test: " << attributes_[bestTest] << endl;
+				BOOST_ASSERT(!saved.unique());
+				BOOST_ASSERT(saved.use_count() == 2);
 #endif
-
+			}
+			cout << "Koniec petli" << endl;
+		}
 		// Zapisanie wybranego testu w wezle
 		queueHead.node->setTest(bestTest);
-		// Utworzenie struktury na przyklady dla dzieci
-		size_t childrenCount = values_[queueHead.node->getTest()].size(); // liczba dzieci
-		vector<ListOfExamples*> childrenExamples = vector<ListOfExamples*>(
-				childrenCount);
-		for (size_t i = 0; i < childrenExamples.size(); ++i)
-			childrenExamples[i] = new ListOfExamples();
-		// Bylo tak:
-		// vector<ListOfExamples*> childrenExamples = vector<ListOfExamples*>(childrenCount, new ListOfExamples());
-		// i nie dzialalo!!! Tworzona byla jedna lista a wskazanie do niej bylo kopiowane childrenCount razy!!!
+		// Usuniecie wybranego testu z listy niewykorzystanych testow
+		queueHead.tests->erase(bestTestIterator);
 #ifdef DEBUG
-		assert(childrenExamples.size() == childrenCount);
-		for (size_t i = 0; i < childrenExamples.size(); ++i) {
-			assert(childrenExamples[i]->size() == 0);
-			assert(childrenExamples[i]->weightSum() == 0.0f);
-		}
-		float exCount = queueHead.examples->weightSum();
+		BOOST_ASSERT(saved.unique());
+		BOOST_ASSERT(saved.use_count() == 1);
 #endif
-		// Podzielenie przykladow ze znanymi wartosciami wybranego testu
-		for (ListOfExamples::iterator iter = queueHead.examples->begin();
-				iter != queueHead.examples->end();) {
-			int value = table[iter->number][queueHead.node->getTest()];
-			if (value == -1) // nieznana wartosc
-				++iter;
-			else {
-				childrenExamples[static_cast<size_t>(value)]->pushBack(
-						Example(iter->number, iter->weight));
-				iter = queueHead.examples->erase(iter);
-			}
-		}
-		// Wyznaczenie mnoznikow
-		vector<float> multipliers = vector<float>(childrenCount, float(0.0f));
-		for (size_t i = 0; i < multipliers.size(); ++i) {
-			multipliers[i] = childrenExamples[i]->weightSum()
-					/ (queueHead.node->getExamplesCount() - queueHead.examples->weightSum());
-		}
-#ifdef DEBUG
-		float multipliersSum = 0.0f;
-		for (size_t i = 0; i < multipliers.size(); ++i) {
-			multipliersSum += multipliers[i];
-		}
-		assert(multipliersSum == 1.0f);
-		if (exCount == queueHead.examples->weightSum()) {
-			for (size_t i = 0; i < multipliers.size(); ++i) {
-				assert(multipliers[i] == 0.0f);
-			}
-		}
-#endif
-		// Podzielenie przykladow z nieznanymi wartosciami wybranego testu
-		// jesli sa TYLKO przyklady z nieznanymi wartosciami to nie zostana podzielone
-		for (ListOfExamples::const_iterator iter = queueHead.examples->begin();
-				iter != queueHead.examples->end(); ++iter) {
-			for (size_t i = 0; i < childrenExamples.size(); ++i) {
-				if (0.0f == multipliers[i]) // nie bylo przykladu o tej wartosci atrybutu
-					continue;
-				childrenExamples[i]->pushBack(
-						Example(iter->number, iter->weight * multipliers[i]));
-			}
-		}
-		// Dodanie do kolejki wszystkich dzieci z ich przykladami
+		// Utworzenie dzieci i dodanie ich do kolejki -
 		// jesli zadne przyklady nie sa podzielone to nic nie zostanie
-		// dodane do kolejki i zostanie ustawiona flaga isLeaf
-		vector<Node*> children = vector<Node*>(childrenCount, NULL);
+		// dodane do kolejki i zostanie utworzony lisc
+		vector<PNode> children = vector<PNode>(saved->size());
 		bool isLeaf = true;
-		for (size_t i = 0; i < childrenExamples.size(); ++i) {
-			if (0 == childrenExamples[i]->size()) { // nie bylo przykladu o tej wartosci atrybutu
-				delete childrenExamples[i];
+		for (size_t i = 0; i < saved->size(); ++i) {
+			if (0 == (*saved)[i]->size()) {	// nie bylo przykladu o tej wartosci atrybutu
 				continue;
 			}
 			isLeaf = false;
-			children[i] = new Node(childrenExamples[i]->weightSum());
-			ListOfTests* childrenTests = new ListOfTests();
-			*childrenTests = *(queueHead.tests);	// gleboka kopia
-#ifdef DEBUG
-			assert(childrenTests != queueHead.tests);	// porownanie wskaznikow
-#endif
-			q.push(UnvisitedNode(children[i], childrenExamples[i], childrenTests));
+			cout << "isLeaf = false" << endl;
+			children[i].reset(new Node((*saved)[i]->weightSum()));
+			PListOfTests childrenTests(new ListOfTests(*(queueHead.tests)));	// gleboka kopia
+			q.push(UnvisitedNode(children[i], (*saved)[i], childrenTests));
 		}
-#ifdef DEBUG
-		if (isLeaf)
-			cout << "!!! isLeaf !!!" << endl;
-#endif
+		cout << "ustawienie rodzicowi wskazan na dzieci" << endl;
 		// Ustawienie rodzicowi wskazan na dzieci
 		if (!isLeaf)	// o ile nie jest lisciem
 			queueHead.node->setChildren(children);
-		delete queueHead.examples; // usuniecie przykladow zwiazanych z wezlem
-		delete queueHead.tests; // usuniecie niewykorzystanych testow
 	}
 
 #ifdef DEBUG
@@ -352,31 +327,58 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 #endif
 }
 
-void DecisionTree::minimumErrorPrunning() {
+void DecisionTree::minimumErrorPrunning() throw (logic_error) {
 	// Sprawdzenie poprawnosci stanu obiektu
 	if (NULL == root)
 		throw logic_error("Decision tree must be built to prune.");
 
 	recursiveMEP(root);
-	// TODO
-	// pamietac aby zamieniajac wezel na lisc podmieniac vector wskazan
-	// na dzieci na pusty vector (patrz metoda Node::isLeaf())
+#ifdef DEBUG
+	cout << "Drzewo: " << endl;
+	printTree(root, 0);
+	testTree(root);
+#endif
 }
 
-void DecisionTree::prune(const Table& examples) {
+float DecisionTree::recursiveMEP(PNode node) {
+	float k = static_cast<float>(values_[categoryIndex_].size());	// liczba kategorii
+	float nodeErrorRate = (node->getMisclassifiedExamplesCount() + k - 1)
+			/ (node->getExamplesCount() + k);	// MEP error rate
+
+	if (node->isLeaf())
+		return nodeErrorRate;
+
+	float subtreeErrorRate = 0.0f;
+	for (size_t i = 0; i < node->getChildrenCount(); ++i) {
+		PNode child(node->getChildAt(i));
+		if (child != NULL) {
+			float multiplier = child->getExamplesCount() / node->getExamplesCount();
+			subtreeErrorRate += (multiplier * recursiveMEP(child));
+		}
+	}
+
+	if (nodeErrorRate < subtreeErrorRate) {
+		node->makeLeaf();
+		return nodeErrorRate;
+	}
+
+	return subtreeErrorRate;
+}
+
+void DecisionTree::reducedErrorPrunning(const Table& examples) throw (logic_error) {
 	// Sprawdzenie poprawnosci stanu obiektu
-	if (NULL == root)
+	if (NULL == root.get())
 		throw logic_error("Decision tree must be built to prune.");
-	// TODO
-	// pamietac aby zamieniajac wezel na lisc podmieniac vector wskazan
-	// na dzieci na pusty vector (patrz metoda Node::isLeaf())
 }
 
-vector<string> DecisionTree::classify(const Table& examples) const {
+vector<string> DecisionTree::classify(const Table& examples) const throw (logic_error,
+		invalid_argument) {
 	// Sprawdzenie poprawnosci stanu obiektu
-	if (NULL == root)
+	if (NULL == root.get())
 		throw logic_error("Decision tree must be built to classify examples.");
 	// Sprawdzenie poprawnosci parametru
+	if (0 == examples.rows()) // brak przykladow
+		throw invalid_argument("Table must have 1 or more rows (1 or more examples).");
 	if (examples.columns() != attributesCount_)
 		throw invalid_argument(
 				"Examples to classify must have the same number of attributes as decision tree.");
@@ -412,7 +414,7 @@ vector<string> DecisionTree::classify(const Table& examples) const {
 	}
 
 	// Utworzenie listy przykladow zwiazanych z wezlem root
-	ListOfExamples* e = new ListOfExamples();
+	PListOfExamples e(new ListOfExamples());
 	for (size_t i = 0; i < examples.rows(); ++i)
 		e->pushBack(Example(i, 1.0f));
 
@@ -435,15 +437,15 @@ vector<string> DecisionTree::classify(const Table& examples) const {
 		if (queueHead.node->isLeaf()) {	// odwiedzony wezel jest lisciem
 			float all = queueHead.node->getExamplesCount();
 #ifdef DEBUG
-			assert(all != 0.0f);
+			BOOST_ASSERT(all != 0.0f);
 #endif
 			float incorrect = queueHead.node->getMisclassifiedExamplesCount();
 			// Obliczenie prawdopodobienstwa ze kategoria przykladu zaliczonego do tego liscia
 			// jest kategoria wyznaczona dla tego liscia
 			float multiplier = (all - incorrect) / all;
 #ifdef DEBUG
-			assert(multiplier <= 1.0f);
-			assert(multiplier > 0.0f);
+			BOOST_ASSERT(multiplier <= 1.0f);
+			BOOST_ASSERT(multiplier > 0.0f);
 #endif
 			size_t leafCategory = queueHead.node->getCategory();	// kategoria liscia
 			// Zwiekszenie prawdopodobienstwa dla wszystkich przykladow zwiazanych z lisciem
@@ -451,15 +453,13 @@ vector<string> DecisionTree::classify(const Table& examples) const {
 					iter != queueHead.examples->end(); ++iter) {
 				probability[iter->number][leafCategory] += (iter->weight * multiplier);
 			}
-			delete queueHead.examples; // usuniecie przykladow zwiazanych z lisciem
 			continue;
 		}
 		// Utworzenie struktury na przyklady dla dzieci
 		size_t childrenCount = queueHead.node->getChildrenCount();	// liczba dzieci
-		vector<ListOfExamples*> childrenExamples = vector<ListOfExamples*>(
-				childrenCount);
+		vector<PListOfExamples> childrenExamples = vector<PListOfExamples>(childrenCount);
 		for (size_t i = 0; i < childrenExamples.size(); ++i)
-			childrenExamples[i] = new ListOfExamples();
+			childrenExamples[i].reset(new ListOfExamples());
 		// Podzielenie przykladow
 		for (ListOfExamples::const_iterator iter = queueHead.examples->begin();
 				iter != queueHead.examples->end(); ++iter) {
@@ -470,12 +470,12 @@ vector<string> DecisionTree::classify(const Table& examples) const {
 			}
 			else {	// brakujaca wartosc lub brak wezla dla tej wartosci
 				for (size_t i = 0; i < childrenCount; ++i) {
-					Node* child = queueHead.node->getChildAt(i);
+					PNode child(queueHead.node->getChildAt(i));
 					if (child != NULL) {
 						float multiplier = child->getExamplesCount() / queueHead.node->getExamplesCount();
 #ifdef DEBUG
-						assert(multiplier <= 1.0f);
-						assert(multiplier > 0.0f);
+						BOOST_ASSERT(multiplier <= 1.0f);
+						BOOST_ASSERT(multiplier > 0.0f);
 #endif
 						childrenExamples[i]->pushBack(Example(iter->number, iter->weight * multiplier));
 					}
@@ -485,12 +485,10 @@ vector<string> DecisionTree::classify(const Table& examples) const {
 		// Dodanie do kolejki wszystkich dzieci z ich przykladami
 		for (size_t i = 0; i < childrenExamples.size(); ++i) {
 			if (0 == childrenExamples[i]->size()) { // nie bylo przykladu o tej wartosci atrybutu
-				delete childrenExamples[i];
 				continue;
 			}
 			q.push(UnvisitedNode(queueHead.node->getChildAt(i), childrenExamples[i]));
 		}
-		delete queueHead.examples; // usuniecie przykladow zwiazanych z wezlem
 	}
 #ifdef DEBUG
 	cout << "probability:" << endl;
@@ -501,12 +499,12 @@ vector<string> DecisionTree::classify(const Table& examples) const {
 			cout << probability[i][j] << " ";
 		}
 		cout << endl;
-		assert(probabilitySum <= 1.0f);
+		BOOST_ASSERT(probabilitySum <= 1.0f);
 	}
 #endif
 	// Wybranie najbardziej prawdopodobnej kategorii dla kazdego z przykladow
-	vector<string> categories = vector<string>(examples.rows());
-	for (size_t i = 0; i < categories.size(); ++i) {
+	vector<string> bestCategories = vector<string>(examples.rows());
+	for (size_t i = 0; i < bestCategories.size(); ++i) {
 		float max = 0.0f;
 		size_t maxIndex = 0;
 		for (size_t j = 0; j < categoryCount; ++j) {
@@ -516,35 +514,10 @@ vector<string> DecisionTree::classify(const Table& examples) const {
 			}
 		}
 #ifdef DEBUG
-		assert(max != 0.0f);
+		BOOST_ASSERT(max != 0.0f);
 #endif
-		categories[i] = values_[categoryIndex_][maxIndex];
+		bestCategories[i] = values_[categoryIndex_][maxIndex];
 	}
 	// Zwrocenie najbardziej prawdopodobnej kategorii dla kazdego z przykladow
-	return categories;
-}
-
-float DecisionTree::recursiveMEP(Node* node) {
-	float k = static_cast<float>(values_[categoryIndex_].size());	// liczba kategorii
-	float nodeErrorRate = (node->getMisclassifiedExamplesCount() + k - 1)
-			/ (node->getExamplesCount() + k);	// MEP error rate
-
-	if (node->isLeaf())
-		return nodeErrorRate;
-
-	float subtreeErrorRate = 0.0f;
-	for (size_t i = 0; i < node->getChildrenCount(); ++i) {
-		Node* child = node->getChildAt(i);
-		if (child != NULL) {
-			float multiplier = child->getExamplesCount() / node->getExamplesCount();
-			subtreeErrorRate += (multiplier * recursiveMEP(child));
-		}
-	}
-
-	if (nodeErrorRate < subtreeErrorRate) {
-		node->makeLeaf();
-		return nodeErrorRate;
-	}
-
-	return subtreeErrorRate;
+	return bestCategories;
 }

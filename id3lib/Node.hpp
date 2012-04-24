@@ -6,8 +6,12 @@
 #define NODE_HPP_
 
 #include <vector>
+#include <boost/shared_ptr.hpp>
 
 namespace id3lib {
+
+class Node;
+typedef boost::shared_ptr<Node> PNode;
 
 class Node {
 public:
@@ -15,27 +19,20 @@ public:
 	 * Tworzy wezel o danej liczbie przykladow z nim zwiazanych
 	 */
 	Node(float examplesCount) :
-			children_(std::vector<Node*>()), category_(0), examplesCount_(
+			children_(std::vector<PNode>()), category_(0), examplesCount_(
 					examplesCount), misclassifiedExamplesCount_(0.0f), test_(0) {
 
-	}
-	/*
-	 * Wywoluje destruktor wszystkich dzieci
-	 */
-	~Node() {
-		for (size_t i = 0; i < children_.size(); ++i)
-			delete children_[i];
 	}
 
 	size_t getChildrenCount() const {
 		return children_.size();
 	}
 
-	Node* getChildAt(size_t i) const {
+	PNode getChildAt(size_t i) const {
 		return children_[i];
 	}
 
-	void setChildren(const std::vector<Node*>& children) {
+	void setChildren(const std::vector<PNode>& children) {
 		children_ = children;
 	}
 
@@ -72,13 +69,13 @@ public:
 	}
 
 	void makeLeaf() {
-		children_ = std::vector<Node*>();
+		children_ = std::vector<PNode>();
 	}
 protected:
 	/*
 	 * Wskazania na dzieci
 	 */
-	std::vector<Node*> children_;
+	std::vector<PNode> children_;
 	/*
 	 * Kategoria wezla
 	 */

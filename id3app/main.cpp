@@ -91,6 +91,8 @@ int main() {
 			cout << " TAK SAMO";
 		cout << endl;
 	}
+	cout << "Przycinanie" << endl;
+	dt.minimumErrorPrunning();
 	cout << "Good Bye ID3!" << endl;
 	return 0;
 }
