@@ -92,7 +92,7 @@ int main() {
 		cout << endl;
 	}
 	cout << "Przycinanie" << endl;
-	dt.minimumErrorPrunning();
+	dt.minimumErrorPrunning(2);
 	cout << "Good Bye ID3!" << endl;
 	return 0;
 }

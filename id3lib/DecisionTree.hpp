@@ -30,7 +30,7 @@ public:
 	/*
 	 * Przycina drzewo metoda Minimum Error Prunning
 	 */
-	void minimumErrorPrunning() throw (std::logic_error);
+	void minimumErrorPrunning(unsigned m) throw (std::logic_error);
 	/*
 	 * Przycina drzewo na podstawie zadanych przykladow
 	 */
@@ -107,7 +107,7 @@ protected:
 	 */
 	PNode root;
 
-	float recursiveMEP(PNode node);
+	float recursiveMEP(PNode node, unsigned m);
 };
 
 } /* namespace id3lib */

@@ -345,22 +345,22 @@ void DecisionTree::build(const Table& examples, size_t categoryIndex,
 #endif
 }
 
-void DecisionTree::minimumErrorPrunning() throw (logic_error) {
+void DecisionTree::minimumErrorPrunning(unsigned m) throw (logic_error) {
 	// Sprawdzenie poprawnosci stanu obiektu
 	if (NULL == root.get())
 		throw logic_error("Decision tree must be built to prune.");
 
-	recursiveMEP(root);
+	recursiveMEP(root, m);
 #ifdef DEBUG
 	cout << "Drzewo: " << endl;
 	printTree(root, 0);
 #endif
 }
 
-float DecisionTree::recursiveMEP(PNode node) {
+float DecisionTree::recursiveMEP(PNode node, unsigned m) {
 	float k = static_cast<float>(values_[categoryIndex_].size());	// liczba kategorii
-	float nodeErrorRate = (node->getMisclassifiedExamplesCount() + k - 1)
-			/ (node->getExamplesCount() + k);	// MEP error rate
+	float nodeErrorRate = (node->getMisclassifiedExamplesCount() + m / k)
+			/ (node->getExamplesCount() + m);	// MEP error rate
 
 	if (node->isLeaf())
 		return nodeErrorRate;
@@ -370,7 +370,7 @@ float DecisionTree::recursiveMEP(PNode node) {
 		PNode child(node->getChildAt(i));
 		if (child != NULL) {
 			float multiplier = child->getExamplesCount() / node->getExamplesCount();
-			subtreeErrorRate += (multiplier * recursiveMEP(child));
+			subtreeErrorRate += (multiplier * recursiveMEP(child, m));
 		}
 	}
 
