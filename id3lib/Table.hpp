@@ -12,7 +12,7 @@
 namespace id3lib {
 
 /*
- * Klasa przechowujaca przyklady. Atrybuty sa inicjowane
+ * Klasa przechowujaca przyklady. Nazwy atrybutow sa inicjowane
  * w konstruktorze i sa stale dla obiektu.
  */
 class Table {

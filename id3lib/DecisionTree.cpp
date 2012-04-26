@@ -359,7 +359,7 @@ void DecisionTree::minimumErrorPrunning(unsigned m) throw (logic_error) {
 
 float DecisionTree::recursiveMEP(PNode node, unsigned m) {
 	float k = static_cast<float>(values_[categoryIndex_].size());	// liczba kategorii
-	float nodeErrorRate = (node->getMisclassifiedExamplesCount() + m / k)
+	float nodeErrorRate = (node->getMisclassifiedExamplesCount() + m * (k - 1) / k)
 			/ (node->getExamplesCount() + m);	// MEP error rate
 
 	if (node->isLeaf())

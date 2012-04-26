@@ -68,6 +68,12 @@ public:
 		return categoryIndex_;
 	}
 	/*
+	 * @return Liczba kategorii
+	 */
+	size_t getCategoryCount() const {
+		return values_[categoryIndex_].size();
+	}
+	/*
 	 * @return Znak reprezentujacy brakujaca wartosc
 	 */
 	const std::string& getMissingValueMark() const {

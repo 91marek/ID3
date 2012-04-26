@@ -57,8 +57,8 @@ int main() {
 	ex4.push_back("yes");
 	vector<string> ex5 = vector<string>();
 	ex5.push_back("rainy");
-	ex5.push_back("?");
-//	ex5.push_back("cold");
+//	ex5.push_back("?");
+	ex5.push_back("cold");
 	ex5.push_back("normal");
 	ex5.push_back("high");
 	ex5.push_back("no");
@@ -92,7 +92,7 @@ int main() {
 		cout << endl;
 	}
 	cout << "Przycinanie" << endl;
-	dt.minimumErrorPrunning(2);
+	dt.minimumErrorPrunning(dt.getCategoryCount());
 	cout << "Good Bye ID3!" << endl;
 	return 0;
 }
