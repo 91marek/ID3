@@ -23,21 +23,6 @@ using namespace std;
 using namespace boost;
 
 #ifdef DEBUG
-void printTree(PNode node, size_t depth) {
-	for (size_t i = 0; i < depth; ++i)
-		cout << "*******";
-	if (!node->isLeaf())
-		cout << "t:" << node->getTest() << " c:" << node->getCategory() << endl;
-	else
-		cout << "LEAF c:" << node->getCategory() << endl;
-	size_t new_depth = ++depth;
-	for (size_t i = 0; i < node->getChildrenCount(); ++i) {
-		PNode child(node->getChildAt(i));
-		if (child != NULL)
-			printTree(child, new_depth);
-	}
-}
-
 void testTree(PNode node) {
 	if (NULL == node)
 		return;
@@ -67,7 +52,7 @@ void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
 	// Sprawdzenie poprawnosci parametru
 	if (0 == examples.rows()) // brak przykladow w zbiorze trenujacym
 		throw invalid_argument(
-				"Table must have 1 or more rows (1 or more examples).");
+				"Training set must have 1 or more rows (1 or more examples).");
 
 	// Inicjalizacja
 	values_ = vector<vector<string> >(examples.columns());
@@ -279,8 +264,6 @@ void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
 				// Obliczenie entropii w obrebie i-tego wyniku testu
 				for (size_t j = 0; j < categories.size(); ++j) {
 					float divided = categories[j] / (*current)[i]->size();
-					// TODO czy to jest niebezpieczne porownanie? raczej nie bo dla malych wartosci,
-					// ale roznych od 0.0f logarytm nie zwraca -inf a poprostu duza liczbe ujemna
 					if (divided != 0.0f)
 						ent -= divided * log10(divided);
 				}
@@ -328,7 +311,7 @@ void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
 
 #ifdef DEBUG
 	cout << "Drzewo: " << endl;
-	printTree(root, 0);
+	recursivePrintTree(cout, root, 0);
 	testTree(root);
 #endif
 }
@@ -341,7 +324,7 @@ void DecisionTree::minimumErrorPrunning(unsigned m) throw (logic_error) {
 	recursiveMEP(root, m);
 #ifdef DEBUG
 	cout << "Drzewo: " << endl;
-	printTree(root, 0);
+	recursivePrintTree(cout, root, 0);
 #endif
 }
 
@@ -525,4 +508,24 @@ shared_ptr<vector<string> > DecisionTree::classify(const Table& examples) const 
 	}
 	// Zwrocenie najbardziej prawdopodobnej kategorii dla kazdego z przykladow
 	return shared_ptr<vector<string> >(bestCategories);
+}
+
+ostream& DecisionTree::operator<<(ostream& os) const {
+	recursivePrintTree(os, root, 0);
+	return os;
+}
+
+void DecisionTree::recursivePrintTree(ostream& os, PNode node, size_t depth) const {
+	for (size_t i = 0; i < depth; ++i)
+		os << "********************";
+	if (!node->isLeaf())
+		os << attributes_[node->getTest()] << ":" << values_[categoryIndex_][node->getCategory()] << endl;
+	else
+		os << "LEAF:" << values_[categoryIndex_][node->getCategory()] << endl;
+	size_t new_depth = ++depth;
+	for (size_t i = 0; i < node->getChildrenCount(); ++i) {
+		PNode child(node->getChildAt(i));
+		if (child != NULL)
+			recursivePrintTree(os, child, new_depth);
+	}
 }

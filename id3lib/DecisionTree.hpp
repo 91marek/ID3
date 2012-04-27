@@ -80,6 +80,10 @@ public:
 	const std::string& getMissingValueMark() const {
 		return missingValueMark_;
 	}
+	/*
+	 * Wypisuje drzewo
+	 */
+	std::ostream& operator<<(std::ostream& os) const;
 protected:
 	/*
 	 * Slownik wartosci atrybutow jakie pojawily sie
@@ -118,6 +122,10 @@ protected:
 	 * metoda MEP
 	 */
 	float recursiveMEP(PNode node, unsigned m);
+	/*
+	 * Rekurencyjne wypisywanie drzewa
+	 */
+	void recursivePrintTree(std::ostream& os, PNode node, size_t depth) const;
 };
 
 } /* namespace id3lib */
