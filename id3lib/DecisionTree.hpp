@@ -8,6 +8,8 @@
 #include "Table.hpp"
 #include "TrainingSet.hpp"
 #include "Node.hpp"
+#include "ErrorRate.hpp"
+#include <boost/shared_array.hpp>
 #include <boost/shared_ptr.hpp>
 #include <string>
 #include <vector>
@@ -80,10 +82,6 @@ public:
 	const std::string& getMissingValueMark() const {
 		return missingValueMark_;
 	}
-	/*
-	 * Wypisuje drzewo
-	 */
-	std::ostream& operator<<(std::ostream& os) const;
 protected:
 	/*
 	 * Slownik wartosci atrybutow jakie pojawily sie
@@ -123,10 +121,26 @@ protected:
 	 */
 	float recursiveMEP(PNode node, unsigned m);
 	/*
+	 * Rekurencyjna funkcja realizujaca przycinanie
+	 * metoda REP
+	 */
+	ErrorRate recursiveREP(PNode node, boost::shared_array<boost::shared_array<int> > t, size_t columns);
+	/*
 	 * Rekurencyjne wypisywanie drzewa
 	 */
 	void recursivePrintTree(std::ostream& os, PNode node, size_t depth) const;
+	/*
+	 * Tworzy tabele int-ow o zadanym rozmiarze
+	 */
+	boost::shared_array<boost::shared_array<int> > makeTable(size_t rows, size_t columns) const;
+	/*
+	 * Wypisuje drzewo
+	 */
+	friend std::ostream& operator<<(std::ostream& os, const DecisionTree& dt);
 };
 
+std::ostream& operator<<(std::ostream& os, const DecisionTree& dt);
+
 } /* namespace id3lib */
+
 #endif /* DECISIONTREE_HPP_ */

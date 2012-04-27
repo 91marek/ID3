@@ -94,6 +94,7 @@ int main() {
 	}
 	cout << "Przycinanie" << endl;
 	dt.minimumErrorPrunning(dt.getCategoryCount());
+	dt.reducedErrorPrunning(examples);
 	cout << "Good Bye ID3!" << endl;
 	return 0;
 }
