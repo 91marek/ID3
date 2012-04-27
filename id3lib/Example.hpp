@@ -7,6 +7,10 @@
 
 namespace id3lib {
 
+/*
+ * Klasa reprezentujaca przyklad w postaci
+ * odwolania do tabeli przykladow
+ */
 class Example {
 public:
 	Example(size_t n, float w) :

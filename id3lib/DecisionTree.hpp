@@ -7,6 +7,7 @@
 
 #include "Table.hpp"
 #include "Node.hpp"
+#include <boost/shared_ptr.hpp>
 #include <string>
 #include <vector>
 #include <stdexcept>
@@ -32,13 +33,13 @@ public:
 	 */
 	void minimumErrorPrunning(unsigned m) throw (std::logic_error);
 	/*
-	 * Przycina drzewo na podstawie zadanych przykladow
+	 * Przycina drzewo metoda Reduced Error Prunning
 	 */
 	void reducedErrorPrunning(const Table& examples) throw (std::logic_error);
 	/*
 	 * Klasyfikuje zadane przyklady
 	 */
-	std::vector<std::string> classify(const Table& examples) const
+	boost::shared_ptr<std::vector<std::string> > classify(const Table& examples) const
 			throw (std::logic_error, std::invalid_argument);
 	/*
 	 * @return Nazwy atrybutow zbioru trenujacego
@@ -112,7 +113,10 @@ protected:
 	 * Wskazanie na korzen drzewa decyzyjnego
 	 */
 	PNode root;
-
+	/*
+	 * Rekurencyjna funkcja realizujaca przycinanie
+	 * metoda MEP
+	 */
 	float recursiveMEP(PNode node, unsigned m);
 };
 

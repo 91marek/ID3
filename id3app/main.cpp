@@ -9,6 +9,7 @@
 #include <id3lib/Table.hpp>
 
 using namespace std;
+using namespace boost;
 using namespace id3lib;
 
 int main() {
@@ -35,8 +36,8 @@ int main() {
 	ex1.push_back("high");
 	ex1.push_back("no");
 	vector<string> ex2 = vector<string>();
-//	ex2.push_back("overcast");
-	ex2.push_back("?");
+	ex2.push_back("overcast");
+//	ex2.push_back("?");
 	ex2.push_back("hot");
 	ex2.push_back("high");
 	ex2.push_back("normal");
@@ -79,11 +80,11 @@ int main() {
 #endif
 	DecisionTree dt = DecisionTree();
 	dt.build(examples, 4, "?");
-	vector<string> categories = dt.classify(examples);
+	shared_ptr<vector<string> > categories(dt.classify(examples));
 	cout << "Wynik klasyfikacji:" << endl;
-	for (size_t i = 0; i < categories.size(); ++i) {
+	for (size_t i = 0; i < categories->size(); ++i) {
 		string before = examples.getValueAt(i, 4);
-		string after = categories[i];
+		string after = (*categories)[i];
 		cout << "pierwotnie: " << before << " wynik: " << after;
 		if (!(before == after))
 			cout << " INACZEJ";

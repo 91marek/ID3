@@ -13,6 +13,9 @@ namespace id3lib {
 class Node;
 typedef boost::shared_ptr<Node> PNode;
 
+/*
+ * Klasa reprezentujaca wezel drzewa decyzyjnego
+ */
 class Node {
 public:
 	/*

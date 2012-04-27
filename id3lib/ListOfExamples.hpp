@@ -10,6 +10,10 @@
 
 namespace id3lib {
 
+/*
+ * Klasa reprezentujaca liste przykladow zwiazanych
+ * z wezlem
+ */
 class ListOfExamples {
 public:
 	typedef std::list<Example>::const_iterator const_iterator;

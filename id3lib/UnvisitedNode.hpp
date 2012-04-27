@@ -17,6 +17,10 @@ typedef boost::shared_ptr<ListOfExamples> PListOfExamples;
 typedef std::list<size_t> ListOfTests;
 typedef boost::shared_ptr<ListOfTests> PListOfTests;
 
+/*
+ * Klasa reprezentujaca nieodwiedzone wezly zarowno
+ * podczas budowy jak i klasyfikacji
+ */
 class UnvisitedNode {
 public:
 	UnvisitedNode(PNode n, PListOfExamples e, PListOfTests t = PListOfTests()) :

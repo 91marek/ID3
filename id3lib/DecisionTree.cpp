@@ -388,7 +388,7 @@ void DecisionTree::reducedErrorPrunning(const Table& examples) throw (logic_erro
 		throw logic_error("Decision tree must be built to prune.");
 }
 
-vector<string> DecisionTree::classify(const Table& examples) const throw (logic_error,
+shared_ptr<vector<string> > DecisionTree::classify(const Table& examples) const throw (logic_error,
 		invalid_argument) {
 	// Sprawdzenie poprawnosci stanu obiektu
 	if (NULL == root.get())
@@ -520,8 +520,8 @@ vector<string> DecisionTree::classify(const Table& examples) const throw (logic_
 	}
 #endif
 	// Wybranie najbardziej prawdopodobnej kategorii dla kazdego z przykladow
-	vector<string> bestCategories = vector<string>(examples.rows());
-	for (size_t i = 0; i < bestCategories.size(); ++i) {
+	vector<string>* bestCategories = new vector<string>(examples.rows());
+	for (size_t i = 0; i < bestCategories->size(); ++i) {
 		float max = 0.0f;
 		size_t maxIndex = 0;
 		for (size_t j = 0; j < categoryCount; ++j) {
@@ -533,8 +533,8 @@ vector<string> DecisionTree::classify(const Table& examples) const throw (logic_
 #ifdef DEBUG
 		BOOST_ASSERT(max != 0.0f);
 #endif
-		bestCategories[i] = values_[categoryIndex_][maxIndex];
+		(*bestCategories)[i] = values_[categoryIndex_][maxIndex];
 	}
 	// Zwrocenie najbardziej prawdopodobnej kategorii dla kazdego z przykladow
-	return bestCategories;
+	return shared_ptr<vector<string> >(bestCategories);
 }
