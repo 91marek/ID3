@@ -20,13 +20,18 @@ public:
 	/*
 	 * Tworzy pusta tabele o okreslonych atrybutach
 	 */
-	Table(const std::vector<std::string>& attr) :
+	Table(const std::vector<std::string>& attr) throw (std::invalid_argument) :
 			attr_(attr), examples_(), columns_(attr.size()) {
+		if (attr.size() < 2)
+			throw std::invalid_argument("Table must have 2 or more columns.");
+	}
+	virtual ~Table() {
+
 	}
 	/*
 	 * Dodaje przyklad na koniec kolekcji
 	 */
-	void pushBack(const std::vector<std::string>& x)
+	virtual void pushBack(const std::vector<std::string>& x)
 			throw (std::invalid_argument);
 	/*
 	 * @return Nazwa atrybutu o podanym indeksie

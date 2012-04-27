@@ -63,31 +63,19 @@ DecisionTree::DecisionTree() :
 
 }
 
-void DecisionTree::build(const Table& examples, size_t categoryIndex,
-		const string& missingValueMark) throw (invalid_argument) {
-	// Sprawdzenie poprawnosci parametrow
-	if (examples.columns() < 2) // musi byc przynajmniej 1 atrybut + kategoria
-		throw invalid_argument(
-				"Table must have 2 or more columns (1 or more attributes + category).");
+void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
+	// Sprawdzenie poprawnosci parametru
 	if (0 == examples.rows()) // brak przykladow w zbiorze trenujacym
 		throw invalid_argument(
 				"Table must have 1 or more rows (1 or more examples).");
-	if (categoryIndex >= examples.columns()) // nie ma tylu kolumn w zbiorze przykladow
-		throw invalid_argument("Index of category column is out of bounds.");
-	// jezeli to sprawdzenie zostanie wykonane pozniej to obiekt moze pozostac
-	// w stanie nieustalonym na skutek rzucenia wyjatku
-	// (degeneracja dotychczas zbudowanego drzewa == bledy przy klasyfikacji)
-	for (size_t x = 0; x < examples.rows(); ++x)
-		if (examples.getValueAt(x, categoryIndex) == missingValueMark) // przyklad z brakujaca kategoria
-			throw invalid_argument("Category could not have missing values.");
 
 	// Inicjalizacja
 	values_ = vector<vector<string> >(examples.columns());
 	attributes_ = examples.getAttr();
 	examplesCount_ = examples.rows();
 	attributesCount_ = examples.columns();
-	categoryIndex_ = categoryIndex;
-	missingValueMark_ = missingValueMark;
+	categoryIndex_ = examples.getCategoryIndex();
+	missingValueMark_ = examples.getMissingValueMark();
 
 	// Utworzenie tablicy na przyklady
 	shared_array<shared_array<int> > table(new shared_array<int> [examplesCount_]);

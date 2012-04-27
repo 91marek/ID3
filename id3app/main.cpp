@@ -20,7 +20,7 @@ int main() {
 	attributes.push_back("humidity");
 	attributes.push_back("wind");
 	attributes.push_back("play");
-	Table examples = Table(attributes);
+	TrainingSet examples = TrainingSet(attributes, 4, "?");
 	vector<string> ex0 = vector<string>();
 	ex0.push_back("sunny");
 	ex0.push_back("?");
@@ -79,7 +79,7 @@ int main() {
 	}
 #endif
 	DecisionTree dt = DecisionTree();
-	dt.build(examples, 4, "?");
+	dt.build(examples);
 	shared_ptr<vector<string> > categories(dt.classify(examples));
 	cout << "Wynik klasyfikacji:" << endl;
 	for (size_t i = 0; i < categories->size(); ++i) {

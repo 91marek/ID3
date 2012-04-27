@@ -6,6 +6,7 @@
 #define DECISIONTREE_HPP_
 
 #include "Table.hpp"
+#include "TrainingSet.hpp"
 #include "Node.hpp"
 #include <boost/shared_ptr.hpp>
 #include <string>
@@ -26,8 +27,7 @@ public:
 	/*
 	 * Buduje drzewo decyzyjne na podstawie przykladow
 	 */
-	void build(const Table& examples, size_t categoryIndex,
-			const std::string& missingValueMark) throw (std::invalid_argument);
+	void build(const TrainingSet& examples) throw (std::invalid_argument);
 	/*
 	 * Przycina drzewo metoda Minimum Error Prunning
 	 */
