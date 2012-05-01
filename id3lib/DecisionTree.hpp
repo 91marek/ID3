@@ -31,13 +31,13 @@ public:
 	 */
 	void build(const TrainingSet& examples) throw (std::invalid_argument);
 	/*
-	 * Przycina drzewo metoda Minimum Error Prunning
+	 * Przycina drzewo metoda Minimum Error Pruning
 	 */
-	void minimumErrorPrunning(unsigned m) throw (std::logic_error);
+	void minimumErrorPruning(unsigned m) throw (std::logic_error);
 	/*
-	 * Przycina drzewo metoda Reduced Error Prunning
+	 * Przycina drzewo metoda Reduced Error Pruning
 	 */
-	void reducedErrorPrunning(const Table& examples) throw (std::logic_error);
+	void reducedErrorPruning(const TrainingSet& examples) throw (std::logic_error);
 	/*
 	 * Klasyfikuje zadane przyklady
 	 */
@@ -128,11 +128,15 @@ protected:
 	/*
 	 * Rekurencyjne wypisywanie drzewa
 	 */
-	void recursivePrintTree(std::ostream& os, PNode node, size_t depth) const;
+	void recursivePrintTree(std::ostream& os, PNode node, size_t depth, size_t test, size_t result) const;
 	/*
 	 * Tworzy tabele int-ow o zadanym rozmiarze
 	 */
 	boost::shared_array<boost::shared_array<int> > makeTable(size_t rows, size_t columns) const;
+	/*
+	 * Mapuje przyklady na tabele int-ow wg zapamietanego slownika
+	 */
+	boost::shared_array<boost::shared_array<int> > map(const Table& examples) const;
 	/*
 	 * Wypisuje drzewo
 	 */

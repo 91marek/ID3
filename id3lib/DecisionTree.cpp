@@ -5,14 +5,13 @@
 #define DEBUG
 
 #ifdef DEBUG
-#include <iostream>
 #include <boost/assert.hpp>
-
 const float EPSILON = 0.00001;
 #endif
 
 #include "DecisionTree.hpp"
 #include "UnvisitedNode.hpp"
+#include <iostream>
 #include <queue>
 #include <cmath>	// log10()
 
@@ -22,7 +21,7 @@ using namespace boost;
 
 #ifdef DEBUG
 void testTree(PNode node) {
-	if (NULL == node)
+	if (NULL == node.get())
 		return;
 	if (node->isLeaf())
 		return;
@@ -30,7 +29,7 @@ void testTree(PNode node) {
 	float sum = 0.0f;
 	for (size_t i = 0; i < node->getChildrenCount(); ++i) {
 		PNode child(node->getChildAt(i));
-		if (NULL != child)
+		if (NULL != child.get())
 			sum += child->getExamplesCount();
 	}
 	cout << "sumaOdDzieci=" << sum << " rodzic=" << node->getExamplesCount() << endl;
@@ -49,8 +48,7 @@ DecisionTree::DecisionTree() :
 void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
 	// Sprawdzenie poprawnosci parametru
 	if (0 == examples.rows()) // brak przykladow w zbiorze trenujacym
-		throw invalid_argument(
-				"Training set must have 1 or more rows (1 or more examples).");
+		throw invalid_argument("Training set must have 1 or more rows (1 or more examples).");
 
 	// Inicjalizacja
 	values_ = vector<vector<string> >(examples.columns());
@@ -95,7 +93,7 @@ void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
 	}
 
 	// Wypisanie tablicy na przyklady
-	cout << "table: " << endl;
+	cout << "table:" << endl;
 	for (size_t i = 0; i < examplesCount_; ++i) {
 		for (size_t j = 0; j < attributesCount_; ++j)
 			cout << table[i][j] << " ";
@@ -141,11 +139,10 @@ void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
 		UnvisitedNode queueHead = q.front();
 		q.pop();
 #ifdef DEBUG
-		BOOST_ASSERT(fabs(queueHead.node->getExamplesCount() - queueHead.examples->weightSum()) < EPSILON);
+		BOOST_ASSERT(queueHead.node->getExamplesCount() == queueHead.examples->weightSum());
 #endif
 		// Zliczenie sumy wag przykladow dla poszczegolnych kategorii
-		vector<float> categories = vector<float>(values_[categoryIndex_].size(),
-				0.0f);
+		vector<float> categories = vector<float>(values_[categoryIndex_].size(), 0.0f);
 		for (ListOfExamples::const_iterator iter = queueHead.examples->begin();
 				iter != queueHead.examples->end(); ++iter) {
 #ifdef DEBUG
@@ -244,9 +241,12 @@ void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
 			// Obliczenie entropii
 			// jesli zadne przyklady nie zostaly podzielone to entropia pozostanie 0.0f
 			float entropy = 0.0f;
+			bool notSplitted = true;
 			for (size_t i = 0; i < current->size(); ++i) {
-				if ((*current)[i]->size() == 0)	// brak przykladow o takim wyniku testu
+				if ((*current)[i]->size() == 0)	{	// brak przykladow o takim wyniku testu
 					continue;
+				}
+				notSplitted = false;	// przynajmniej jeden przyklad bez brakujacej wartosci dla danego testu
 				// Entropia w obrebie i-tego wyniku testu
 				float ent = 0.0f;
 				// Zliczenie liczby przykladow poszczegolnych kategorii w obrebie
@@ -259,13 +259,26 @@ void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
 				}
 				// Obliczenie entropii w obrebie i-tego wyniku testu
 				for (size_t j = 0; j < categories.size(); ++j) {
-					float divided = categories[j] / (*current)[i]->size();
-					if (divided != 0.0f)
-						ent -= divided * log10(divided);
+					if (categories[j] == 0.0f) {
+						continue;
+					}
+					float divided = categories[j] / (*current)[i]->weightSum();
+					ent -= divided * log10(divided);
 				}
+#ifdef DEBUG
+				cout << "ent: " << ent << " ";
+#endif
 				entropy += (*current)[i]->weightSum() / queueHead.node->getExamplesCount() * ent;
 			}
-
+			// maksymalna entropia jesli podzial nie dzieli przykladow
+			// (ze wzgledu na same brakujace wartosci)
+			if (notSplitted) {
+				cout << "notSplitted " << "max: " << numeric_limits<float>::max() << endl;
+				entropy = numeric_limits<float>::max();
+			}
+#ifdef DEBUG
+			cout << endl << "entropy: " << entropy << endl;
+#endif
 			if (firstTime || entropy < minEntropy) {
 				firstTime = false;
 				bestTest = *iter;
@@ -279,6 +292,7 @@ void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
 			}
 		}
 #ifdef DEBUG
+		cout << "minEntropy: " << minEntropy << endl << endl;
 		BOOST_ASSERT(saved.unique());
 		BOOST_ASSERT(saved.use_count() == 1);
 #endif
@@ -306,19 +320,19 @@ void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
 	}
 
 #ifdef DEBUG
-	cout << "Drzewo: " << endl << *this;
+	cout << "Drzewo:" << endl << *this;
 	testTree(root);
 #endif
 }
 
-void DecisionTree::minimumErrorPrunning(unsigned m) throw (logic_error) {
+void DecisionTree::minimumErrorPruning(unsigned m) throw (logic_error) {
 	// Sprawdzenie poprawnosci stanu obiektu
 	if (NULL == root.get())
 		throw logic_error("Decision tree must be built to prune.");
 
 	recursiveMEP(root, m);
 #ifdef DEBUG
-	cout << "Drzewo: " << endl << *this;
+	cout << "Drzewo po MEP:" << endl << *this;
 #endif
 }
 
@@ -347,7 +361,7 @@ float DecisionTree::recursiveMEP(PNode node, unsigned m) {
 	return subtreeErrorRate;
 }
 
-void DecisionTree::reducedErrorPrunning(const Table& examples) throw (logic_error) {
+void DecisionTree::reducedErrorPruning(const TrainingSet& examples) throw (logic_error) {
 	// Sprawdzenie poprawnosci stanu obiektu
 	if (NULL == root.get())
 		throw logic_error("Decision tree must be built to prune.");
@@ -355,47 +369,29 @@ void DecisionTree::reducedErrorPrunning(const Table& examples) throw (logic_erro
 	if (0 == examples.rows()) // brak przykladow
 		throw invalid_argument("Table must have 1 or more rows (1 or more examples).");
 	if (examples.columns() != attributesCount_)
-		throw invalid_argument(
-				"Examples for prunning must have the same number of attributes as decision tree.");
+		throw invalid_argument("Examples must have the same number of attributes as decision tree.");
 	for (size_t i = 0; i < examples.columns(); ++i)
 		if (!(attributes_[i] == examples.getAttrAt(i)))
-			throw invalid_argument(
-					"Examples for prunning must have the same names of attributes as decision tree.");
+			throw invalid_argument("Examples must have the same names of attributes as decision tree.");
 
-	// Utworzenie tablicy na przyklady
-	shared_array<shared_array<int> > table = makeTable(examples.rows(), examples.columns());
+	// Mapowanie przykladow na tabele int-ow wg zapamietanego slownika
+	shared_array<shared_array<int> > table = map(examples);
 
-	// Mapowanie stringow na int wg zapamietanego slownika
-	for (size_t y = 0; y < examples.columns(); ++y) {
-		for (size_t x = 0; x < examples.rows(); ++x) {
-			if (examples.getValueAt(x, y) == missingValueMark_) {
-				table[x][y] = -1; // -1 dla brakujacych wartosci
-				continue;
-			}
-			size_t k = 0;
-			for (; k < values_[y].size(); ++k) { // wyszukanie wartosci w slowniku
-				if (examples.getValueAt(x, y) == values_[y][k])
-					break;
-			}
-			if (k < values_[y].size()) // znaleziono wartosc w slowniku
-				table[x][y] = static_cast<int>(k);
-			else {	// nie znaleziono wartosci w slowniku
-				table[x][y] = -1; // zakwalifikowanie do brakujacych wartosci
-			}
-		}
-	}
-	recursiveREP(root, table, examples.columns());
+	recursiveREP(root, table, examples.rows());
+#ifdef DEBUG
+	cout << "Drzewo po REP:" << endl << *this;
+#endif
 }
 
-ErrorRate DecisionTree::recursiveREP(PNode node, shared_array<shared_array<int> > t, size_t columns) {
+ErrorRate DecisionTree::recursiveREP(PNode node, shared_array<shared_array<int> > t, size_t rows) {
 	// obliczenie bledu na zbiorze do przycinania
 	ErrorRate leafErrorRate;
 	int category = static_cast<int>(node->getCategory());
-	for (size_t i = 0; i < columns; ++i) {	// TODO!!!!!!
-		if (t[i][categoryIndex_] != category) {
-			++leafErrorRate.misclassified;
-		}
-		++leafErrorRate.all;
+	for (size_t i = 0; i < rows; ++i) {
+		if (t[i][categoryIndex_] != category)
+			leafErrorRate.misclassifiedExample();
+		else
+			leafErrorRate.correctlyClassifiedExample();
 	}
 
 	if (node->isLeaf())
@@ -405,7 +401,7 @@ ErrorRate DecisionTree::recursiveREP(PNode node, shared_array<shared_array<int> 
 	for (size_t i = 0; i < node->getChildrenCount(); ++i) {
 		PNode child(node->getChildAt(i));
 		if (child != NULL) {
-			treeErrorRate += recursiveREP(child, t, columns);
+			treeErrorRate += recursiveREP(child, t, rows);
 		}
 	}
 
@@ -426,35 +422,13 @@ shared_ptr<vector<string> > DecisionTree::classify(const Table& examples) const 
 	if (0 == examples.rows()) // brak przykladow
 		throw invalid_argument("Table must have 1 or more rows (1 or more examples).");
 	if (examples.columns() != attributesCount_)
-		throw invalid_argument(
-				"Examples to classify must have the same number of attributes as decision tree.");
+		throw invalid_argument("Examples must have the same number of attributes as decision tree.");
 	for (size_t i = 0; i < examples.columns(); ++i)
 		if (!(attributes_[i] == examples.getAttrAt(i)))
-			throw invalid_argument(
-					"Examples to classify must have the same names of attributes as decision tree.");
+			throw invalid_argument("Examples must have the same names of attributes as decision tree.");
 
-	// Utworzenie tablicy na przyklady
-	shared_array<shared_array<int> > table = makeTable(examples.rows(), examples.columns());
-
-	// Mapowanie stringow na int wg zapamietanego slownika
-	for (size_t y = 0; y < examples.columns(); ++y) {
-		for (size_t x = 0; x < examples.rows(); ++x) {
-			if (examples.getValueAt(x, y) == missingValueMark_) {
-				table[x][y] = -1; // -1 dla brakujacych wartosci
-				continue;
-			}
-			size_t k = 0;
-			for (; k < values_[y].size(); ++k) { // wyszukanie wartosci w slowniku
-				if (examples.getValueAt(x, y) == values_[y][k])
-					break;
-			}
-			if (k < values_[y].size()) // znaleziono wartosc w slowniku
-				table[x][y] = static_cast<int>(k);
-			else {	// nie znaleziono wartosci w slowniku
-				table[x][y] = -1; // zakwalifikowanie do brakujacych wartosci
-			}
-		}
-	}
+	// Mapowanie przykladow na tabele int-ow wg zapamietanego slownika
+	shared_array<shared_array<int> > table = map(examples);
 
 	// Utworzenie listy przykladow zwiazanych z wezlem root
 	PListOfExamples e(new ListOfExamples());
@@ -565,18 +539,24 @@ shared_ptr<vector<string> > DecisionTree::classify(const Table& examples) const 
 	return shared_ptr<vector<string> >(bestCategories);
 }
 
-void DecisionTree::recursivePrintTree(ostream& os, PNode node, size_t depth) const {
+void DecisionTree::recursivePrintTree(ostream& os, PNode node, size_t depth, size_t test, size_t result) const {
 	for (size_t i = 0; i < depth; ++i)
-		os << "******************";
-	if (!node->isLeaf())
-		os << attributes_[node->getTest()] << ":" << values_[categoryIndex_][node->getCategory()] << endl;
+		os << "#";
+	os << "(";
+	if (0 == depth)
+		os << "|";
 	else
-		os << "LEAF:" << values_[categoryIndex_][node->getCategory()] << endl;
+		os << values_[test][result] << "|";
+	if (!node->isLeaf())
+		os << values_[categoryIndex_][node->getCategory()] << "|" << attributes_[node->getTest()];
+	else
+		os << values_[categoryIndex_][node->getCategory()] << "|";
+	os << ")" << endl;
 	size_t new_depth = ++depth;
 	for (size_t i = 0; i < node->getChildrenCount(); ++i) {
 		PNode child(node->getChildAt(i));
 		if (child != NULL)
-			recursivePrintTree(os, child, new_depth);
+			recursivePrintTree(os, child, new_depth, node->getTest(), i);
 	}
 }
 
@@ -587,7 +567,36 @@ shared_array<shared_array<int> > DecisionTree::makeTable(size_t rows, size_t col
 	return table;
 }
 
+shared_array<shared_array<int> > DecisionTree::map(const Table& examples) const {
+	// Utworzenie tablicy na przyklady
+	shared_array<shared_array<int> > table = makeTable(examples.rows(), examples.columns());
+
+	// Mapowanie stringow na int wg zapamietanego slownika
+	for (size_t y = 0; y < examples.columns(); ++y) {
+		for (size_t x = 0; x < examples.rows(); ++x) {
+			if (examples.getValueAt(x, y) == missingValueMark_) {
+				table[x][y] = -1; // -1 dla brakujacych wartosci
+				continue;
+			}
+			size_t k = 0;
+			for (; k < values_[y].size(); ++k) { // wyszukanie wartosci w slowniku
+				if (examples.getValueAt(x, y) == values_[y][k])
+					break;
+			}
+			if (k < values_[y].size()) // znaleziono wartosc w slowniku
+				table[x][y] = static_cast<int>(k);
+			else {	// nie znaleziono wartosci w slowniku
+				table[x][y] = -1; // zakwalifikowanie do brakujacych wartosci
+			}
+		}
+	}
+	return table;
+}
+
 std::ostream& id3lib::operator<<(std::ostream& os, const DecisionTree& dt) {
-	dt.recursivePrintTree(os, dt.root, 0);
+	if (NULL == dt.root.get())
+		os << "Decision tree is not built." << endl;
+	else
+		dt.recursivePrintTree(os, dt.root, 0, 0, 0);
 	return os;
 }

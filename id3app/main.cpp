@@ -7,6 +7,7 @@
 #include <iostream>
 #include <id3lib/DecisionTree.hpp>
 #include <id3lib/Table.hpp>
+#include <stdexcept>
 
 using namespace std;
 using namespace boost;
@@ -29,37 +30,37 @@ int main() {
 	ex0.push_back("normal");
 	ex0.push_back("no");
 	vector<string> ex1 = vector<string>();
-//	ex1.push_back("sunny");
+	ex1.push_back("sunny");
 	ex1.push_back("?");
-	ex1.push_back("hot");
+//	ex1.push_back("hot");
 	ex1.push_back("high");
 	ex1.push_back("high");
 	ex1.push_back("no");
 	vector<string> ex2 = vector<string>();
 	ex2.push_back("overcast");
-//	ex2.push_back("?");
-	ex2.push_back("hot");
+	ex2.push_back("?");
+//	ex2.push_back("hot");
 	ex2.push_back("high");
 	ex2.push_back("normal");
 	ex2.push_back("yes");
 	vector<string> ex3 = vector<string>();
 	ex3.push_back("rainy");
 	ex3.push_back("?");
-	ex3.push_back("mild");
-//	ex3.push_back("high");
+//	ex3.push_back("mild");
+	ex3.push_back("high");
 	ex3.push_back("normal");
 	ex3.push_back("yes");
 	vector<string> ex4 = vector<string>();
 	ex4.push_back("rainy");
-//	ex4.push_back("?");
-	ex4.push_back("cold");
+	ex4.push_back("?");
+//	ex4.push_back("cold");
 	ex4.push_back("normal");
 	ex4.push_back("normal");
 	ex4.push_back("yes");
 	vector<string> ex5 = vector<string>();
 	ex5.push_back("rainy");
-//	ex5.push_back("?");
-	ex5.push_back("cold");
+	ex5.push_back("?");
+//	ex5.push_back("cold");
 	ex5.push_back("normal");
 	ex5.push_back("high");
 	ex5.push_back("no");
@@ -92,9 +93,18 @@ int main() {
 			cout << " TAK SAMO";
 		cout << endl;
 	}
-	cout << "Przycinanie" << endl;
-	dt.minimumErrorPrunning(dt.getCategoryCount());
-	dt.reducedErrorPrunning(examples);
+	dt.minimumErrorPruning(dt.getCategoryCount());
+	dt.reducedErrorPruning(examples);
 	cout << "Good Bye ID3!" << endl;
+	DecisionTree dt2 = DecisionTree();
+	cout << dt2;
+	TrainingSet e = TrainingSet(attributes, 4, "?");
+	try {
+		e.readFromFile("example.txt");
+		DecisionTree dt3 = DecisionTree();
+		dt3.build(e);
+	} catch (const std::exception& e) {
+		cout << e.what() << endl;
+	}
 	return 0;
 }

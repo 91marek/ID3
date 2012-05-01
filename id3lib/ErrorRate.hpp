@@ -9,21 +9,52 @@ namespace id3lib {
 
 class ErrorRate {
 public:
-	ErrorRate() : misclassified(0.0f), all(0.0f) {
+	ErrorRate() : misclassified_(0.0f), all_(0.0f) {
 
 	}
+	/*
+	 * Funkcje nalezy wywolac, gdy napotkany przyklad jest
+	 * blednie klasyfikowany
+	 */
+	void misclassifiedExample() {
+		++misclassified_;
+		++all_;
+	}
+	/*
+	 * Funkcje nalezy wywolac, gdy napotkany przyklad jest
+	 * poprawnie klasyfikowany
+	 */
+	void correctlyClassifiedExample() {
+		++all_;
+	}
+	/*
+	 * Zwieksza blad o inny blad
+	 */
 	void operator+=(const ErrorRate& er) {
-		misclassified += er.misclassified;
-		all += er.all;
+		misclassified_ += er.misclassified_;
+		all_ += er.all_;
 	}
-	bool operator<(const ErrorRate& er) {
-		return (misclassified / all) < (er.misclassified / er.all);
+	/*
+	 * Porownuje bledy
+	 */
+	bool operator<(const ErrorRate& er) const {
+		return (misclassified_ / all_) < (er.misclassified_ / er.all_);
 	}
-	bool operator>(const ErrorRate& er) {
-		return (misclassified / all) > (er.misclassified / er.all);
+	/*
+	 * Porownuje bledy
+	 */
+	bool operator>(const ErrorRate& er) const {
+		return (misclassified_ / all_) > (er.misclassified_ / er.all_);
 	}
-	float misclassified;
-	float all;
+private:
+	/*
+	 * Liczba blednie klasyfikowanych przykladow
+	 */
+	float misclassified_;
+	/*
+	 * Liczba wszystkich przykladow
+	 */
+	float all_;
 };
 
 } /* namespace id3lib */
