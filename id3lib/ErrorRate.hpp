@@ -13,6 +13,12 @@ public:
 
 	}
 	/*
+	 * @return Wartosc bledu
+	 */
+	float get() const {
+		return misclassified_ / all_;
+	}
+	/*
 	 * Funkcje nalezy wywolac, gdy napotkany przyklad jest
 	 * blednie klasyfikowany
 	 */

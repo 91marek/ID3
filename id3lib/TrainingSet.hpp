@@ -34,6 +34,12 @@ public:
 	virtual void pushBack(const std::vector<std::string>& x)
 			throw (std::invalid_argument);
 	/*
+	 * @return Kategorie okreslonego przykladu
+	 */
+	const std::string& getCategoryAt(size_t x) const {
+		return examples_[x][categoryIndex_];
+	}
+	/*
 	 * @return Indeks atrybutu bedacego kategoria
 	 */
 	size_t getCategoryIndex() const {

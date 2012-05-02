@@ -25,14 +25,12 @@ void testTree(PNode node) {
 		return;
 	if (node->isLeaf())
 		return;
-	cout << "t:" << node->getTest() << " c:" << node->getCategory() << " ";
 	float sum = 0.0f;
 	for (size_t i = 0; i < node->getChildrenCount(); ++i) {
 		PNode child(node->getChildAt(i));
 		if (NULL != child.get())
 			sum += child->getExamplesCount();
 	}
-	cout << "sumaOdDzieci=" << sum << " rodzic=" << node->getExamplesCount() << endl;
 	BOOST_ASSERT(fabs(sum - node->getExamplesCount()) < EPSILON);
 	for (size_t i = 0; i < node->getChildrenCount(); ++i)
 		testTree(node->getChildAt(i));

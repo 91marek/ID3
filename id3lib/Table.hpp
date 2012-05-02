@@ -31,7 +31,7 @@ public:
 	/*
 	 * Wczytuje przyklady z pliku i dodaje je na koniec kolekcji
 	 */
-	void readFromFile(const std::string& path) throw (std::runtime_error, std::invalid_argument);
+	void readFromFile(const std::string& path) throw (std::runtime_error);
 	/*
 	 * Dodaje przyklad na koniec kolekcji
 	 */

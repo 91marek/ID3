@@ -2,8 +2,6 @@
  * main.cpp
  */
 
-#define DEBUG
-
 #include <iostream>
 #include <id3lib/DecisionTree.hpp>
 #include <id3lib/Table.hpp>
@@ -15,12 +13,14 @@ using namespace id3lib;
 
 int main() {
 	cout << "Hello ID3!" << endl;
+
+	/* ---ENJOY_SPORT--- */
 	vector<string> attributes = vector<string>();
 	attributes.push_back("outlook");
 	attributes.push_back("temperature");
 	attributes.push_back("humidity");
 	attributes.push_back("wind");
-	attributes.push_back("play");
+	attributes.push_back("enjoy_sport");
 	TrainingSet examples = TrainingSet(attributes, 4, "?");
 	vector<string> ex0 = vector<string>();
 	ex0.push_back("sunny");
@@ -70,7 +70,6 @@ int main() {
 	examples.pushBack(ex3);
 	examples.pushBack(ex4);
 	examples.pushBack(ex5);
-#ifdef DEBUG
 	cout << "examples:" << endl;
 	for (size_t i = 0; i < examples.rows(); ++i) {
 		for (size_t j = 0; j < examples.columns(); ++j) {
@@ -78,7 +77,6 @@ int main() {
 		}
 		cout << endl;
 	}
-#endif
 	DecisionTree dt = DecisionTree();
 	dt.build(examples);
 	shared_ptr<vector<string> > categories(dt.classify(examples));
@@ -95,16 +93,60 @@ int main() {
 	}
 	dt.minimumErrorPruning(dt.getCategoryCount());
 	dt.reducedErrorPruning(examples);
-	cout << "Good Bye ID3!" << endl;
-	DecisionTree dt2 = DecisionTree();
-	cout << dt2;
+
+	/* ---ENJOY_SPORT--- */
 	TrainingSet e = TrainingSet(attributes, 4, "?");
 	try {
-		e.readFromFile("example.txt");
+		e.readFromFile("enjoy_sport.txt");
 		DecisionTree dt3 = DecisionTree();
 		dt3.build(e);
 	} catch (const std::exception& e) {
-		cout << e.what() << endl;
+		cerr << e.what() << endl;
 	}
+
+	/* ---EAT_MUSHROOM--- */
+	vector<string> attr = vector<string>();
+	attr.push_back("eat");
+	attr.push_back("cap-shape");
+	attr.push_back("cap-surface");
+	attr.push_back("cap-color");
+	attr.push_back("bruises");
+	attr.push_back("odor");
+	attr.push_back("gill-attachment");
+	attr.push_back("gill-spacing");
+	attr.push_back("gill-size");
+	attr.push_back("gill-color");
+	attr.push_back("stalk-shape");
+	attr.push_back("stalk-root");
+	attr.push_back("stalk-surface-above-ring");
+	attr.push_back("stalk-surface-below-ring");
+	attr.push_back("stalk-color-above-ring");
+	attr.push_back("stalk-color-below-ring");
+	attr.push_back("veil-type");
+	attr.push_back("veil-color");
+	attr.push_back("ring-number");
+	attr.push_back("ring-type");
+	attr.push_back("spore-print-color");
+	attr.push_back("population");
+	attr.push_back("habitat");
+	TrainingSet mushroom_table = TrainingSet(attr, 0, "?");
+	try {
+		mushroom_table.readFromFile("eat_mushroom.txt");
+		DecisionTree mushroom_dt = DecisionTree();
+		mushroom_dt.build(mushroom_table);
+		shared_ptr<vector<string> > result(mushroom_dt.classify(mushroom_table));
+		ErrorRate er;
+		for (size_t i = 0; i < result->size(); ++i) {
+			if ((*result)[i] != mushroom_table.getCategoryAt(i))
+				er.misclassifiedExample();
+			else
+				er.correctlyClassifiedExample();
+		}
+		cout << "Error rate: " << er.get() << endl;
+	} catch (std::exception& e) {
+		cerr << e.what() << endl;
+	}
+
+	cout << "Good Bye ID3!" << endl;
 	return 0;
 }

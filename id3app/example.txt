@@ -1,3 +1,0 @@
-sunny, hot, high, normal, no
-sunny, hot, high, high, no
-overcast, hot, high, normal, yes
