@@ -7,8 +7,8 @@
 
 #include "Table.hpp"
 #include "TrainingSet.hpp"
+#include "UnvisitedNode.hpp"
 #include "Node.hpp"
-#include "ErrorRate.hpp"
 #include <boost/shared_array.hpp>
 #include <boost/shared_ptr.hpp>
 #include <string>
@@ -16,6 +16,9 @@
 #include <stdexcept>
 
 namespace id3lib {
+
+typedef std::vector<PListOfExamples> ExamplesForChildren;
+typedef boost::shared_ptr<ExamplesForChildren> PExamplesForChildren;
 
 /*
  * Klasa reprezentujaca drzewo decyzyjne
@@ -27,21 +30,19 @@ public:
 	 */
 	DecisionTree();
 	/*
+	 * Niszczy drzewo decyzyjne
+	 */
+	virtual ~DecisionTree() {
+
+	}
+	/*
 	 * Buduje drzewo decyzyjne na podstawie przykladow
 	 */
-	void build(const TrainingSet& examples) throw (std::invalid_argument);
-	/*
-	 * Przycina drzewo metoda Minimum Error Pruning
-	 */
-	void minimumErrorPruning(unsigned m) throw (std::logic_error);
-	/*
-	 * Przycina drzewo metoda Reduced Error Pruning
-	 */
-	void reducedErrorPruning(const TrainingSet& examples) throw (std::logic_error);
+	virtual void build(const TrainingSet& examples) throw (std::invalid_argument);
 	/*
 	 * Klasyfikuje zadane przyklady
 	 */
-	boost::shared_ptr<std::vector<std::string> > classify(const Table& examples) const
+	virtual boost::shared_ptr<std::vector<std::string> > classify(const Table& examples) const
 			throw (std::logic_error, std::invalid_argument);
 	/*
 	 * @return Nazwy atrybutow zbioru trenujacego
@@ -116,20 +117,6 @@ protected:
 	 */
 	PNode root;
 	/*
-	 * Rekurencyjna funkcja realizujaca przycinanie
-	 * metoda MEP
-	 */
-	float recursiveMEP(PNode node, unsigned m);
-	/*
-	 * Rekurencyjna funkcja realizujaca przycinanie
-	 * metoda REP
-	 */
-	ErrorRate recursiveREP(PNode node, boost::shared_array<boost::shared_array<int> > t, size_t columns);
-	/*
-	 * Rekurencyjne wypisywanie drzewa
-	 */
-	void recursivePrintTree(std::ostream& os, PNode node, size_t depth, size_t test, size_t result) const;
-	/*
 	 * Tworzy tabele int-ow o zadanym rozmiarze
 	 */
 	boost::shared_array<boost::shared_array<int> > makeTable(size_t rows, size_t columns) const;
@@ -138,9 +125,18 @@ protected:
 	 */
 	boost::shared_array<boost::shared_array<int> > map(const Table& examples) const;
 	/*
+	 * Rekurencyjne wypisywanie drzewa
+	 */
+	void recursivePrintTree(std::ostream& os, PNode node, size_t depth, size_t test, size_t result) const;
+	/*
 	 * Wypisuje drzewo
 	 */
 	friend std::ostream& operator<<(std::ostream& os, const DecisionTree& dt);
+	/*
+	 * Dzieli przyklady wg zadanego testu
+	 */
+	virtual PExamplesForChildren split(ListOfExamples examples, size_t test,
+			boost::shared_array<boost::shared_array<int> > table) const = 0;
 };
 
 std::ostream& operator<<(std::ostream& os, const DecisionTree& dt);

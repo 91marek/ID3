@@ -5,11 +5,16 @@
 #ifndef ERRORRATE_HPP_
 #define ERRORRATE_HPP_
 
+#include <boost/shared_ptr.hpp>
+#include <string>
+#include <vector>
+
 namespace id3lib {
 
 class ErrorRate {
 public:
-	ErrorRate() : misclassified_(0.0f), all_(0.0f) {
+	ErrorRate() :
+			misclassified_(0.0f), all_(0.0f) {
 
 	}
 	/*
@@ -17,6 +22,16 @@ public:
 	 */
 	float get() const {
 		return misclassified_ / all_;
+	}
+	/*
+	 * Oblicza blad
+	 */
+	void count(boost::shared_ptr<std::vector<std::string> > result, const TrainingSet& ts) {
+		for (size_t i = 0; i < result->size(); ++i)
+			if ((*result)[i] != ts.getCategoryAt(i))
+				misclassifiedExample();
+			else
+				correctlyClassifiedExample();
 	}
 	/*
 	 * Funkcje nalezy wywolac, gdy napotkany przyklad jest

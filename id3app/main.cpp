@@ -4,7 +4,8 @@
 
 #include <iostream>
 #include <id3lib/DecisionTree.hpp>
-#include <id3lib/Table.hpp>
+#include <id3lib/ZPRDecisionTree.hpp>
+#include <id3lib/UMDecisionTree.hpp>
 #include <stdexcept>
 
 using namespace std;
@@ -77,28 +78,34 @@ int main() {
 		}
 		cout << endl;
 	}
-	DecisionTree dt = DecisionTree();
+	UMDecisionTree dt = UMDecisionTree();
 	dt.build(examples);
+	dt.minimumErrorPruning(dt.getCategoryCount());
 	shared_ptr<vector<string> > categories(dt.classify(examples));
+	ErrorRate err = ErrorRate();
 	cout << "Wynik klasyfikacji:" << endl;
 	for (size_t i = 0; i < categories->size(); ++i) {
 		string before = examples.getValueAt(i, 4);
 		string after = (*categories)[i];
 		cout << "pierwotnie: " << before << " wynik: " << after;
-		if (!(before == after))
+		if (!(before == after)) {
 			cout << " INACZEJ";
-		else
+			err.misclassifiedExample();
+		}
+		else {
 			cout << " TAK SAMO";
+			err.correctlyClassifiedExample();
+		}
 		cout << endl;
 	}
-	dt.minimumErrorPruning(dt.getCategoryCount());
+	cout << "Error rate: " << err.get() << endl;
 	dt.reducedErrorPruning(examples);
 
 	/* ---ENJOY_SPORT--- */
 	TrainingSet e = TrainingSet(attributes, 4, "?");
 	try {
 		e.readFromFile("enjoy_sport.txt");
-		DecisionTree dt3 = DecisionTree();
+		ZPRDecisionTree dt3 = ZPRDecisionTree();
 		dt3.build(e);
 	} catch (const std::exception& e) {
 		cerr << e.what() << endl;
@@ -132,16 +139,11 @@ int main() {
 	TrainingSet mushroom_table = TrainingSet(attr, 0, "?");
 	try {
 		mushroom_table.readFromFile("eat_mushroom.txt");
-		DecisionTree mushroom_dt = DecisionTree();
+		ZPRDecisionTree mushroom_dt = ZPRDecisionTree();
 		mushroom_dt.build(mushroom_table);
 		shared_ptr<vector<string> > result(mushroom_dt.classify(mushroom_table));
-		ErrorRate er;
-		for (size_t i = 0; i < result->size(); ++i) {
-			if ((*result)[i] != mushroom_table.getCategoryAt(i))
-				er.misclassifiedExample();
-			else
-				er.correctlyClassifiedExample();
-		}
+		ErrorRate er = ErrorRate();
+		er.count(result, mushroom_table);
 		cout << "Error rate: " << er.get() << endl;
 	} catch (std::exception& e) {
 		cerr << e.what() << endl;

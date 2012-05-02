@@ -192,52 +192,15 @@ void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
 		float minEntropy;
 		ListOfTests::iterator bestTestIterator;
 
-		typedef vector<PListOfExamples> ExamplesForChildren;
-		typedef shared_ptr<ExamplesForChildren> PExamplesForChildren;
 		PExamplesForChildren saved;
 
 		for (ListOfTests::iterator iter = queueHead.tests->begin();
 				iter != queueHead.tests->end(); ++iter) {
-			// Utworzenie struktury na przyklady dla dzieci
-			size_t childrenCount = values_[*iter].size(); // liczba dzieci
-			PExamplesForChildren current = PExamplesForChildren(new ExamplesForChildren(childrenCount));
-			for (size_t i = 0; i < current->size(); ++i)
-				(*current)[i].reset(new ListOfExamples);
-
-			// glebokie kopiowanie przykladow zwiazanych z aktualnie przetwarzanym wezlem
-			ListOfExamples currentExamples(*(queueHead.examples));
-
-			// Podzielenie przykladow ze znanymi wartosciami wybranego testu
-			for (ListOfExamples::iterator i = currentExamples.begin(); i != currentExamples.end();) {
-				int value = table[i->number][*iter];
-				if (value == -1) // nieznana wartosc
-					++i;
-				else {
-					(*current)[static_cast<size_t>(value)]->pushBack(Example(i->number, i->weight));
-					i = currentExamples.erase(i);
-				}
-			}
-
-			// Wyznaczenie mnoznikow
-			vector<float> multipliers = vector<float>(childrenCount, float(0.0f));
-			float alreadySplitted = queueHead.node->getExamplesCount() - currentExamples.weightSum();
-			for (size_t i = 0; i < multipliers.size(); ++i) {
-				multipliers[i] = (*current)[i]->weightSum() / alreadySplitted;
-			}
-
-			// Podzielenie przykladow z nieznanymi wartosciami wybranego testu
-			// jesli sa wylacznie przyklady z nieznanymi wartosciami to nie zostana podzielone
-			for (ListOfExamples::const_iterator i = currentExamples.begin();
-					i != currentExamples.end(); ++i) {
-				for (size_t j = 0; j < current->size(); ++j) {
-					if (0 == (*current)[j]->size()) // nie bylo przykladu o tej wartosci atrybutu
-						continue;
-					(*current)[j]->pushBack(Example(i->number, i->weight * multipliers[j]));
-				}
-			}
+			// Podzielenie przykladow wg danego testu
+			PExamplesForChildren current(split(*(queueHead.examples), *iter, table));
 
 			// Obliczenie entropii
-			// jesli zadne przyklady nie zostaly podzielone to entropia pozostanie 0.0f
+			// jesli zadne przyklady nie zostaly podzielone to entropia maksymalna
 			float entropy = 0.0f;
 			bool notSplitted = true;
 			for (size_t i = 0; i < current->size(); ++i) {
@@ -271,7 +234,6 @@ void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
 			// maksymalna entropia jesli podzial nie dzieli przykladow
 			// (ze wzgledu na same brakujace wartosci)
 			if (notSplitted) {
-				cout << "notSplitted " << "max: " << numeric_limits<float>::max() << endl;
 				entropy = numeric_limits<float>::max();
 			}
 #ifdef DEBUG
@@ -321,94 +283,6 @@ void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
 	cout << "Drzewo:" << endl << *this;
 	testTree(root);
 #endif
-}
-
-void DecisionTree::minimumErrorPruning(unsigned m) throw (logic_error) {
-	// Sprawdzenie poprawnosci stanu obiektu
-	if (NULL == root.get())
-		throw logic_error("Decision tree must be built to prune.");
-
-	recursiveMEP(root, m);
-#ifdef DEBUG
-	cout << "Drzewo po MEP:" << endl << *this;
-#endif
-}
-
-float DecisionTree::recursiveMEP(PNode node, unsigned m) {
-	float k = static_cast<float>(values_[categoryIndex_].size());	// liczba kategorii
-	float nodeErrorRate = (node->getMisclassifiedExamplesCount() + m * (k - 1) / k)
-			/ (node->getExamplesCount() + m);	// MEP error rate
-
-	if (node->isLeaf())
-		return nodeErrorRate;
-
-	float subtreeErrorRate = 0.0f;
-	for (size_t i = 0; i < node->getChildrenCount(); ++i) {
-		PNode child(node->getChildAt(i));
-		if (child != NULL) {
-			float multiplier = child->getExamplesCount() / node->getExamplesCount();
-			subtreeErrorRate += (multiplier * recursiveMEP(child, m));
-		}
-	}
-
-	if (nodeErrorRate < subtreeErrorRate) {	// warunek przyciecia
-		node->makeLeaf();
-		return nodeErrorRate;
-	}
-
-	return subtreeErrorRate;
-}
-
-void DecisionTree::reducedErrorPruning(const TrainingSet& examples) throw (logic_error) {
-	// Sprawdzenie poprawnosci stanu obiektu
-	if (NULL == root.get())
-		throw logic_error("Decision tree must be built to prune.");
-	// Sprawdzenie poprawnosci parametru
-	if (0 == examples.rows()) // brak przykladow
-		throw invalid_argument("Table must have 1 or more rows (1 or more examples).");
-	if (examples.columns() != attributesCount_)
-		throw invalid_argument("Examples must have the same number of attributes as decision tree.");
-	for (size_t i = 0; i < examples.columns(); ++i)
-		if (!(attributes_[i] == examples.getAttrAt(i)))
-			throw invalid_argument("Examples must have the same names of attributes as decision tree.");
-
-	// Mapowanie przykladow na tabele int-ow wg zapamietanego slownika
-	shared_array<shared_array<int> > table = map(examples);
-
-	recursiveREP(root, table, examples.rows());
-#ifdef DEBUG
-	cout << "Drzewo po REP:" << endl << *this;
-#endif
-}
-
-ErrorRate DecisionTree::recursiveREP(PNode node, shared_array<shared_array<int> > t, size_t rows) {
-	// obliczenie bledu na zbiorze do przycinania
-	ErrorRate leafErrorRate;
-	int category = static_cast<int>(node->getCategory());
-	for (size_t i = 0; i < rows; ++i) {
-		if (t[i][categoryIndex_] != category)
-			leafErrorRate.misclassifiedExample();
-		else
-			leafErrorRate.correctlyClassifiedExample();
-	}
-
-	if (node->isLeaf())
-		return leafErrorRate;
-
-	ErrorRate treeErrorRate;
-	for (size_t i = 0; i < node->getChildrenCount(); ++i) {
-		PNode child(node->getChildAt(i));
-		if (child != NULL) {
-			treeErrorRate += recursiveREP(child, t, rows);
-		}
-	}
-
-	if (leafErrorRate < treeErrorRate) {	// warunek przyciecia
-		node->makeLeaf();
-		return leafErrorRate;
-	}
-
-	return treeErrorRate;
 }
 
 shared_ptr<vector<string> > DecisionTree::classify(const Table& examples) const throw (logic_error,
