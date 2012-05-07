@@ -30,8 +30,9 @@ public:
 	}
 	/*
 	 * Wczytuje przyklady z pliku i dodaje je na koniec kolekcji
+	 * @return Liczba wczytanych przykladow
 	 */
-	void readFromFile(const std::string& path) throw (std::runtime_error);
+	size_t readFromStream(std::istream& is, const std::string& separator);
 	/*
 	 * Dodaje przyklad na koniec kolekcji
 	 */

@@ -2,8 +2,6 @@
  * UMDecisionTree.cpp
  */
 
-#define DEBUG
-
 #ifdef DEBUG
 #include <boost/assert.hpp>
 const float EPSILON = 0.00001;

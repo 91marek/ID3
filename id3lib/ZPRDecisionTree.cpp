@@ -2,8 +2,6 @@
  * ZPRDecisionTree.cpp
  */
 
-#define DEBUG
-
 #ifdef DEBUG
 #include <boost/assert.hpp>
 const float EPSILON = 0.00001;
@@ -41,7 +39,7 @@ PExamplesForChildren ZPRDecisionTree::split(ListOfExamples examples, size_t test
 
 	// Wyznaczenie najczesciej wystepujacej wartosci
 	float max = 0.0f;
-	size_t maxIndex;
+	size_t maxIndex = 0;
 	for (size_t i = 0; i < childrenExamplesCounter.size(); ++i) {
 		if (childrenExamplesCounter[i] > max) {
 			max = childrenExamplesCounter[i];

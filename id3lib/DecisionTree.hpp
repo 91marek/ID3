@@ -40,6 +40,10 @@ public:
 	 */
 	virtual void build(const TrainingSet& examples) throw (std::invalid_argument);
 	/*
+	 * Buduje drzewo decyzyjne na podstawie przykladow ze strumienia
+	 */
+	virtual void build(std::istream& is, const std::string& separator) throw (std::invalid_argument);
+	/*
 	 * Klasyfikuje zadane przyklady
 	 */
 	virtual boost::shared_ptr<std::vector<std::string> > classify(const Table& examples) const

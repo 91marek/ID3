@@ -3,6 +3,7 @@
  */
 
 #include <iostream>
+#include <fstream>
 #include <id3lib/DecisionTree.hpp>
 #include <id3lib/ZPRDecisionTree.hpp>
 #include <id3lib/UMDecisionTree.hpp>
@@ -104,7 +105,8 @@ int main() {
 	/* ---ENJOY_SPORT--- */
 	TrainingSet e = TrainingSet(attributes, 4, "?");
 	try {
-		e.readFromFile("enjoy_sport.txt");
+		ifstream file("enjoy_sport.txt");
+		e.readFromStream(file, ", ");
 		ZPRDecisionTree dt3 = ZPRDecisionTree();
 		dt3.build(e);
 	} catch (const std::exception& e) {
@@ -138,13 +140,14 @@ int main() {
 	attr.push_back("habitat");
 	TrainingSet mushroom_table = TrainingSet(attr, 0, "?");
 	try {
-		mushroom_table.readFromFile("eat_mushroom.txt");
+		ifstream file2("eat_mushroom.txt");
+		size_t examplesCount = mushroom_table.readFromStream(file2, ", ");
 		ZPRDecisionTree mushroom_dt = ZPRDecisionTree();
 		mushroom_dt.build(mushroom_table);
 		shared_ptr<vector<string> > result(mushroom_dt.classify(mushroom_table));
 		ErrorRate er = ErrorRate();
 		er.count(result, mushroom_table);
-		cout << "Error rate: " << er.get() << endl;
+		cout << "Liczba wczytanych przykladow: " << examplesCount << " Error rate: " << er.get() << endl;
 	} catch (std::exception& e) {
 		cerr << e.what() << endl;
 	}

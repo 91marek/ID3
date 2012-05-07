@@ -2,8 +2,6 @@
  * DecisionTree.cpp
  */
 
-#define DEBUG
-
 #ifdef DEBUG
 #include <boost/assert.hpp>
 const float EPSILON = 0.00001;
@@ -188,8 +186,8 @@ void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
 
 		// Wybranie testu + podzial przykladow
 		bool firstTime = true;
-		size_t bestTest;
-		float minEntropy;
+		size_t bestTest = 0;
+		float minEntropy = numeric_limits<float>::max();
 		ListOfTests::iterator bestTestIterator;
 
 		PExamplesForChildren saved;
@@ -283,6 +281,11 @@ void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
 	cout << "Drzewo:" << endl << *this;
 	testTree(root);
 #endif
+}
+
+void DecisionTree::build(istream& is, const string& separator) throw (invalid_argument) {
+	// TODO
+	return;
 }
 
 shared_ptr<vector<string> > DecisionTree::classify(const Table& examples) const throw (logic_error,
