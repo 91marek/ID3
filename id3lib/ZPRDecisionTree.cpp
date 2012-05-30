@@ -20,6 +20,8 @@ using boost::shared_ptr;
 using std::logic_error;
 using std::ostream;
 using std::endl;
+using std::cout;
+
 PExamplesForChildren ZPRDecisionTree::split(ListOfExamples examples, size_t test,
 		shared_array<shared_array<int> > table) const {
 	// Utworzenie struktury na przyklady dla dzieci

@@ -25,6 +25,7 @@ using boost::shared_ptr;
 using std::logic_error;
 using std::ostream;
 using std::endl;
+using std::cout;
 
 #ifdef DEBUG
 void testTree(PNode node) {

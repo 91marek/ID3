@@ -17,6 +17,8 @@ using boost::shared_array;
 using std::numeric_limits;
 using std::istream;
 using boost::shared_ptr;
+using boost::tokenizer;
+using boost::char_separator;
 using std::logic_error;
 using std::ostream;
 using std::endl;
