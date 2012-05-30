@@ -10,8 +10,19 @@
 #include <stdexcept>
 #include <boost/tokenizer.hpp>
 
-using namespace std;
-using namespace boost;
+using std::vector;
+using std::string;
+using std::invalid_argument;
+using boost::shared_array;
+using std::numeric_limits;
+using std::istream;
+using boost::shared_ptr;
+using std::logic_error;
+using std::ostream;
+using std::endl;
+using std::cout;
+using std::cerr;
+using std::ifstream;
 using namespace id3lib;
 
 int main(int argc, char* argv[]) {

@@ -7,8 +7,19 @@
 #include <iostream>
 #include <fstream>
 
-using namespace std;
-using namespace boost;
+using std::vector;
+using std::string;
+using std::invalid_argument;
+using std::numeric_limits;
+using std::istream;
+using std::logic_error;
+using std::ostream;
+using std::endl;
+using boost::char_separator;
+using boost::tokenizer;
+using std::cerr;
+
+
 using namespace id3lib;
 
 void Table::pushBack(const vector<string>& x) throw (invalid_argument) {

@@ -9,6 +9,10 @@
 #include <vector>
 #include <stdexcept>
 
+#ifdef _MSC_VER
+#pragma warning( disable : 4290 )
+#endif
+
 namespace id3lib {
 
 /*

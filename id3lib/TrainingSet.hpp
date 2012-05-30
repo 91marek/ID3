@@ -5,6 +5,9 @@
 #ifndef TRAININGSET_HPP_
 #define TRAININGSET_HPP_
 
+#ifdef _MSC_VER
+#pragma warning( disable : 4290 )
+#endif
 #include <string>
 #include <vector>
 #include "Table.hpp"
