@@ -14,8 +14,17 @@ const float EPSILON = 0.00001;
 #include <cmath>	// log10()
 
 using namespace id3lib;
-using namespace std;
-using namespace boost;
+using std::vector;
+using std::string;
+using std::invalid_argument;
+using boost::shared_array;
+using std::queue;
+using std::numeric_limits;
+using std::istream;
+using boost::shared_ptr;
+using std::logic_error;
+using std::ostream;
+using std::endl;
 
 #ifdef DEBUG
 void testTree(PNode node) {

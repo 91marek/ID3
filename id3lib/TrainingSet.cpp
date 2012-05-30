@@ -4,7 +4,10 @@
 
 #include "TrainingSet.hpp"
 
-using namespace std;
+
+using std::invalid_argument;
+using std::vector;
+using std::string;
 using namespace id3lib;
 
 void TrainingSet::pushBack(const vector<string>& x) throw (invalid_argument) {

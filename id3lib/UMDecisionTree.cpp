@@ -10,8 +10,16 @@ const float EPSILON = 0.00001;
 #include "UMDecisionTree.hpp"
 
 using namespace id3lib;
-using namespace std;
-using namespace boost;
+using std::vector;
+using std::string;
+using std::invalid_argument;
+using boost::shared_array;
+using std::numeric_limits;
+using std::istream;
+using boost::shared_ptr;
+using std::logic_error;
+using std::ostream;
+using std::endl;
 
 PExamplesForChildren UMDecisionTree::split(ListOfExamples examples, size_t test,
 		shared_array<shared_array<int> > table) const {
