@@ -4,7 +4,7 @@
 
 #ifdef DEBUG
 #include <boost/assert.hpp>
-const float EPSILON = 0.00001;
+const float EPSILON = 0.00001F;
 #endif
 
 #include "UMDecisionTree.hpp"
@@ -20,6 +20,7 @@ using boost::shared_ptr;
 using std::logic_error;
 using std::ostream;
 using std::endl;
+using std::cout;
 
 PExamplesForChildren UMDecisionTree::split(ListOfExamples examples, size_t test,
 		shared_array<shared_array<int> > table) const {
