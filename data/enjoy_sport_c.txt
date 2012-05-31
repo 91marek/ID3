@@ -1,0 +1,5 @@
+enjoy_sport, overlook, temperature, humidity, wind
+yes, sunny, mild, normal, high
+yes, overcast, mild, high, high
+yes, overcast, hot, hormal, normal
+no, rainy, mild, high, high
