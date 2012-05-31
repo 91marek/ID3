@@ -32,6 +32,7 @@ int main(int argc, char* argv[]) {
 		cout
 				<< "Usage: building_set_file prunning_set_file to_classify_set_file"
 				<< endl;
+		return EXIT_FAILURE;
 	}
 
 	// domyslne wartosci
@@ -122,5 +123,5 @@ int main(int argc, char* argv[]) {
 		cerr << e.what() << endl;
 	}
 
-	return 0;
+	return EXIT_SUCCESS;
 }
