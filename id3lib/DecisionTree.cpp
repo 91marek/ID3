@@ -286,16 +286,11 @@ void DecisionTree::build(const TrainingSet& examples) throw (invalid_argument) {
 		if (!isLeaf)	// o ile nie jest lisciem
 			queueHead.node->setChildren(children);
 	}
-
-#ifdef DEBUG
-	cout << "Drzewo:" << endl << *this;
-	testTree(root);
-#endif
 }
 
-void DecisionTree::build(istream& is, const string& separator) throw (invalid_argument) {
+size_t DecisionTree::build(istream& is, const string& separator) throw (invalid_argument) {
 	// TODO
-	return;
+	return 0;
 }
 
 shared_ptr<vector<string> > DecisionTree::classify(const Table& examples) const throw (logic_error,

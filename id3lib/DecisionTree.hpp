@@ -46,7 +46,7 @@ public:
 	/*
 	 * Buduje drzewo decyzyjne na podstawie przykladow ze strumienia
 	 */
-	virtual void build(std::istream& is, const std::string& separator) throw (std::invalid_argument);
+	virtual size_t build(std::istream& is, const std::string& separator) throw (std::invalid_argument);
 	/*
 	 * Klasyfikuje zadane przyklady
 	 */

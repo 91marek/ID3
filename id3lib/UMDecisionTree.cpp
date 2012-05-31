@@ -70,9 +70,6 @@ void UMDecisionTree::minimumErrorPruning(unsigned m) throw (logic_error) {
 		throw logic_error("Decision tree must be built to prune.");
 
 	recursiveMEP(root, m);
-#ifdef DEBUG
-	cout << "Drzewo po MEP:" << endl << *this;
-#endif
 }
 
 float UMDecisionTree::recursiveMEP(PNode node, unsigned m) {

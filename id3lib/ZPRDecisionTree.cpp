@@ -86,9 +86,6 @@ void ZPRDecisionTree::reducedErrorPruning(const TrainingSet& examples) throw (lo
 	shared_array<shared_array<int> > table = map(examples);
 
 	recursiveREP(root, table, examples.rows());
-#ifdef DEBUG
-	cout << "Drzewo po REP:" << endl << *this;
-#endif
 }
 
 ErrorRate ZPRDecisionTree::recursiveREP(PNode node, shared_array<shared_array<int> > t, size_t rows) {
