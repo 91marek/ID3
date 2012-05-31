@@ -1,3 +1,5 @@
+# Ignore (s)contructed app
+id3
 # Ignore all dotfiles...
 .*
 # except for .gitignore
