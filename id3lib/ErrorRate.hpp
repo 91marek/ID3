@@ -68,6 +68,18 @@ public:
 		return (misclassified_ / all_) > (er.misclassified_ / er.all_);
 	}
 	/*
+	 * Porownuje bledy
+	 */
+	bool operator<=(const ErrorRate& er) const {
+		return (misclassified_ / all_) <= (er.misclassified_ / er.all_);
+	}
+	/*
+	 * Porownuje bledy
+	 */
+	bool operator>=(const ErrorRate& er) const {
+		return (misclassified_ / all_) >= (er.misclassified_ / er.all_);
+	}
+	/*
 	 * getter
 	 */
 	float getAllExamples() const {

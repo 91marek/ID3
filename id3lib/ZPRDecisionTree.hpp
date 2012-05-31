@@ -28,7 +28,7 @@ protected:
 	 * metoda REP
 	 */
 	ErrorRate recursiveREP(PNode node,
-			boost::shared_array<boost::shared_array<int> > t, size_t rows);
+			boost::shared_array<boost::shared_array<int> > t, PListOfExamples e);
 	/*
 	 * Dzieli przyklady wg zadanego testu
 	 * Dla brakujacych wartosci stosowana jest

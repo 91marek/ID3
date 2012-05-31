@@ -133,6 +133,10 @@ protected:
 	 */
 	boost::shared_array<boost::shared_array<int> > map(const Table& examples) const;
 	/*
+	 * Dzieli klasyfikowane przyklady
+	 */
+	PExamplesForChildren classifySplit(PNode node, boost::shared_array<boost::shared_array<int> > table, PListOfExamples e) const;
+	/*
 	 * Rekurencyjne wypisywanie drzewa
 	 */
 	void recursivePrintTree(std::ostream& os, PNode node, size_t depth, size_t test, size_t result) const;

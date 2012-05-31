@@ -22,8 +22,8 @@ using std::ostream;
 using std::endl;
 using std::cout;
 
-PExamplesForChildren ZPRDecisionTree::split(ListOfExamples examples, size_t test,
-		shared_array<shared_array<int> > table) const {
+PExamplesForChildren ZPRDecisionTree::split(ListOfExamples examples,
+		size_t test, shared_array<shared_array<int> > table) const {
 	// Utworzenie struktury na przyklady dla dzieci
 	size_t childrenCount = values_[test].size(); // liczba dzieci
 	PExamplesForChildren forChildren(new ExamplesForChildren(childrenCount));
@@ -69,31 +69,42 @@ PExamplesForChildren ZPRDecisionTree::split(ListOfExamples examples, size_t test
 	return forChildren;
 }
 
-void ZPRDecisionTree::reducedErrorPruning(const TrainingSet& examples) throw (logic_error) {
+void ZPRDecisionTree::reducedErrorPruning(const TrainingSet& examples)
+		throw (logic_error) {
 	// Sprawdzenie poprawnosci stanu obiektu
 	if (NULL == root.get())
 		throw logic_error("Decision tree must be built to prune.");
 	// Sprawdzenie poprawnosci parametru
 	if (0 == examples.rows()) // brak przykladow
-		throw invalid_argument("Table must have 1 or more rows (1 or more examples).");
+		throw invalid_argument(
+				"Table must have 1 or more rows (1 or more examples).");
 	if (examples.columns() != attributesCount_)
-		throw invalid_argument("Examples must have the same number of attributes as decision tree.");
+		throw invalid_argument(
+				"Examples must have the same number of attributes as decision tree.");
 	for (size_t i = 0; i < examples.columns(); ++i)
 		if (!(attributes_[i] == examples.getAttrAt(i)))
-			throw invalid_argument("Examples must have the same names of attributes as decision tree.");
+			throw invalid_argument(
+					"Examples must have the same names of attributes as decision tree.");
 
 	// Mapowanie przykladow na tabele int-ow wg zapamietanego slownika
 	shared_array<shared_array<int> > table = map(examples);
 
-	recursiveREP(root, table, examples.rows());
+	// Utworzenie listy przykladow zwiazanych z wezlem root
+	PListOfExamples e(new ListOfExamples());
+	for (size_t i = 0; i < examples.rows(); ++i)
+		e->pushBack(Example(i, 1.0f));
+
+	recursiveREP(root, table, e);
 }
 
-ErrorRate ZPRDecisionTree::recursiveREP(PNode node, shared_array<shared_array<int> > t, size_t rows) {
+ErrorRate ZPRDecisionTree::recursiveREP(PNode node,
+		shared_array<shared_array<int> > table, PListOfExamples e) {
 	// obliczenie bledu na zbiorze do przycinania
 	ErrorRate leafErrorRate;
 	int category = static_cast<int>(node->getCategory());
-	for (size_t i = 0; i < rows; ++i) {
-		if (t[i][categoryIndex_] != category)
+	for (ListOfExamples::const_iterator iter = e->begin(); iter != e->end();
+			++iter) {
+		if (table[iter->number][categoryIndex_] != category)
 			leafErrorRate.misclassifiedExample();
 		else
 			leafErrorRate.correctlyClassifiedExample();
@@ -102,15 +113,17 @@ ErrorRate ZPRDecisionTree::recursiveREP(PNode node, shared_array<shared_array<in
 	if (node->isLeaf())
 		return leafErrorRate;
 
+	PExamplesForChildren forChildren = classifySplit(node, table, e);
+
 	ErrorRate treeErrorRate;
 	for (size_t i = 0; i < node->getChildrenCount(); ++i) {
 		PNode child(node->getChildAt(i));
-		if (child != NULL) {
-			treeErrorRate += recursiveREP(child, t, rows);
+		if (child != NULL && (*forChildren)[i]->size() != 0) {
+			treeErrorRate += recursiveREP(child, table, (*forChildren)[i]);
 		}
 	}
 
-	if (leafErrorRate < treeErrorRate) {	// warunek przyciecia
+	if (leafErrorRate <= treeErrorRate) { // warunek przyciecia
 		node->makeLeaf();
 		return leafErrorRate;
 	}
