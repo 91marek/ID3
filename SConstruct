@@ -1,4 +1,4 @@
-# SConstruct - TODO
+# SConstruct
 ### opcje
 boost_path='F:/boost_1_49_0'
 ##
