@@ -67,6 +67,18 @@ public:
 	bool operator>(const ErrorRate& er) const {
 		return (misclassified_ / all_) > (er.misclassified_ / er.all_);
 	}
+	/*
+	 * getter
+	 */
+	float getAllExamples() const {
+		return all_;
+	}
+	/*
+	 * getter
+	 */
+	float getMisclassifiedExamples() const {
+		return misclassified_;
+	}
 private:
 	/*
 	 * Liczba blednie klasyfikowanych przykladow

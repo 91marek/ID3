@@ -39,30 +39,6 @@ int main(int argc, char* argv[]) {
 	char missing_mark[] = "?";
 	unsigned category_index = 0;
 
-	/*
-	 UMDecisionTree dt = UMDecisionTree();
-	 dt.build(examples);
-	 dt.minimumErrorPruning(dt.getCategoryCount());
-	 shared_ptr<vector<string> > categories(dt.classify(examples));
-	 ErrorRate err = ErrorRate();
-	 cout << "Wynik klasyfikacji:" << endl;
-	 for (size_t i = 0; i < categories->size(); ++i) {
-	 string before = examples.getValueAt(i, 4);
-	 string after = (*categories)[i];
-	 cout << "pierwotnie: " << before << " wynik: " << after;
-	 if (!(before == after)) {
-	 cout << " INACZEJ";
-	 err.misclassifiedExample();
-	 } else {
-	 cout << " TAK SAMO";
-	 err.correctlyClassifiedExample();
-	 }
-	 cout << endl;
-	 }
-	 cout << "Error rate: " << err.get() << endl;
-	 dt.reducedErrorPruning(examples);
-	 */
-
 	try {
 		/* Building tree */
 		vector<string> attr = vector<string>();
