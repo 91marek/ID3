@@ -4,7 +4,7 @@
 
 #ifdef DEBUG
 #include <boost/assert.hpp>
-const float EPSILON = 0.00001;
+const float EPSILON = 0.00001F;
 #endif
 
 #include "UMDecisionTree.hpp"
