@@ -1,2 +1,0 @@
-enjoy_sport, overlook, temperature, humidity, wind
-yes, rainy, mild, normal, normal
