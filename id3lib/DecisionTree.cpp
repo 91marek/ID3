@@ -416,8 +416,8 @@ shared_ptr<vector<string> > DecisionTree::classify(const Table& examples) const
 void DecisionTree::recursivePrintTree(ostream& os, PNode node, size_t depth,
 		size_t test, size_t result) const {
 	for (size_t i = 0; i < depth; ++i)
-		os << "#";
-	os << "(";
+		os << ".";
+	os << depth << "(";
 	if (0 == depth)
 		os << "|";
 	else
