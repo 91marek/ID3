@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
 		shared_ptr<vector<string> > result(dt->classify(to_classify_table));
 		ErrorRate er = ErrorRate();
 		er.count(result, to_classify_table);
-		cout << "Error rate: " << er.get() << endl;
+		cout << "Error rate before pruning: " << er.get() << endl;
 
 		/* Prunning tree */
 		if (ZPR_MODE == mode) {
@@ -192,7 +192,7 @@ int main(int argc, char* argv[]) {
 		shared_ptr<vector<string> > result2(dt->classify(to_classify_table));
 		ErrorRate er2 = ErrorRate();
 		er2.count(result2, to_classify_table);
-		cout << "Error rate: " << er2.get() << endl;
+		cout << "Error rate after pruning: " << er2.get() << endl;
 		delete dt;
 	} catch (std::exception& e) {
 		cerr << e.what() << endl;

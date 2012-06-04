@@ -1,0 +1,22 @@
+Error rate before pruning: 0 
+Error rate after pruning: 0.0208333   Cut nodes: 174
+Error rate after pruning: 0.0208333   Cut nodes: 174
+Error rate after pruning: 0.0324074   Cut nodes: 200
+Error rate after pruning: 0.0850694   Cut nodes: 302
+Error rate after pruning: 0.156829   Cut nodes: 375
+Error rate after pruning: 0.186343   Cut nodes: 390
+Error rate after pruning: 0.230903   Cut nodes: 401
+Error rate after pruning: 0.299769   Cut nodes: 407
+Error rate after pruning: 0.299769   Cut nodes: 407
+Error rate after pruning: 0.299769   Cut nodes: 407
+Error rate after pruning: 0.299769   Cut nodes: 407
+Error rate after pruning: 0.299769   Cut nodes: 407
+Error rate after pruning: 0.299769   Cut nodes: 407
+Error rate after pruning: 0.299769   Cut nodes: 407
+Error rate after pruning: 0.299769   Cut nodes: 407
+Error rate after pruning: 0.299769   Cut nodes: 407
+Error rate after pruning: 0.299769   Cut nodes: 407
+Error rate after pruning: 0.299769   Cut nodes: 407
+Error rate after pruning: 0.299769   Cut nodes: 407
+Error rate after pruning: 0.299769   Cut nodes: 407
+Error rate after pruning: 0.299769   Cut nodes: 407
