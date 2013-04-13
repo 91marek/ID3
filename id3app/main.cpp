@@ -38,10 +38,19 @@ const char zpr[] = "zpr";
 const char um[] = "um";
 
 void help() {
-	cerr << "Usage:" << endl
-	<< string(zpr) + " building_set_file prunning_set_file to_classify_set_file category_index"
+	cerr << "Args:" << endl
+	<< string(zpr) + " building_set_file pruning_set_file to_classify_set_file category_index"
 	<< endl << "or" << endl
 	<< string(um) + " building_set_file to_classify_set_file category_index mep_parameter"
+	<< endl
+	<< endl
+	<< "category_index - Index of column category counted from 0."
+	<< endl
+	<< "Important! All files must have column names in first line."
+	<< endl
+	<< string(zpr) + " uses REP pruning method."
+	<< endl
+	<< string(um) + " uses MEP pruning method."
 	<< endl;
 }
 
@@ -161,13 +170,13 @@ int main(int argc, char* argv[]) {
 		er.count(result, to_classify_table);
 		cout << "Error rate before pruning: " << er.get() << endl;
 
-		/* Prunning tree */
+		/* Pruning tree */
 		if (ZPR_MODE == mode) {
 			attr = vector<string>();
 			line = "";
-			ifstream prunning_set_file(argv[3]);
-			if (prunning_set_file.is_open()) {
-				getline(prunning_set_file, line);
+			ifstream pruning_set_file(argv[3]);
+			if (pruning_set_file.is_open()) {
+				getline(pruning_set_file, line);
 			} else
 				throw string("Unable to open file: " + string(argv[3]));
 
@@ -176,14 +185,14 @@ int main(int argc, char* argv[]) {
 					++tok_iter)
 				attr.push_back(string(*tok_iter));
 
-			TrainingSet prunning_table = TrainingSet(attr, category_index,
+			TrainingSet pruning_table = TrainingSet(attr, category_index,
 					missing_value_mark);
-			examplesCount = prunning_table.readFromStream(prunning_set_file,
+			examplesCount = pruning_table.readFromStream(pruning_set_file,
 					separator);
 			cout << "Number of readed examples to prune:"
 					<< examplesCount << endl;
-			prunning_set_file.close();
-			static_cast<ZPRDecisionTree*>(dt)->reducedErrorPruning(prunning_table);
+			pruning_set_file.close();
+			static_cast<ZPRDecisionTree*>(dt)->reducedErrorPruning(pruning_table);
 		} else if (UM_MODE == mode) {
 			cout << "MEP parameter = " << mep_parameter << endl;
 			static_cast<UMDecisionTree*>(dt)->minimumErrorPruning(mep_parameter);
