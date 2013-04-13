@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
 				missing_value_mark);
 		examplesCount = to_classify_table.readFromStream(to_classify_set_file,
 				separator);
-		cout << "Number of readed examples to classify: "
+		cout << "Number of readed examples to classify:"
 				<< examplesCount << endl;
 		to_classify_set_file.close();
 		shared_ptr<vector<string> > result(dt->classify(to_classify_table));
@@ -180,7 +180,7 @@ int main(int argc, char* argv[]) {
 					missing_value_mark);
 			examplesCount = prunning_table.readFromStream(prunning_set_file,
 					separator);
-			cout << "Number of readed examples to prune: "
+			cout << "Number of readed examples to prune:"
 					<< examplesCount << endl;
 			prunning_set_file.close();
 			static_cast<ZPRDecisionTree*>(dt)->reducedErrorPruning(prunning_table);
