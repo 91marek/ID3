@@ -8,6 +8,7 @@ const float EPSILON = 0.00001F;
 #endif
 
 #include "UMDecisionTree.hpp"
+#include <limits>
 
 using namespace id3lib;
 using std::vector;

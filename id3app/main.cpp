@@ -11,6 +11,7 @@
 #include <id3lib/UMDecisionTree.hpp>
 #include <stdexcept>
 #include <boost/tokenizer.hpp>
+#include <limits>
 
 using std::vector;
 using std::string;
@@ -37,7 +38,7 @@ const char zpr[] = "zpr";
 const char um[] = "um";
 
 void help() {
-	cout << "Usage:" << endl
+	cerr << "Usage:" << endl
 	<< string(zpr) + " building_set_file prunning_set_file to_classify_set_file category_index"
 	<< endl << "or" << endl
 	<< string(um) + " building_set_file to_classify_set_file category_index mep_parameter"
@@ -101,7 +102,7 @@ int main(int argc, char* argv[]) {
 		if (building_set_file.is_open()) {
 			getline(building_set_file, line);
 		} else
-			cout << "Unable to open file: " << argv[2] << endl;
+			throw string("Unable to open file: " + string(argv[2]));
 
 		typedef tokenizer<char_separator<char> > tokenizer;
 		char_separator<char> sep(separator);
@@ -110,11 +111,13 @@ int main(int argc, char* argv[]) {
 				++tok_iter)
 			attr.push_back(string(*tok_iter));
 
+		cout << "Category name: " << attr[category_index] << endl;
+
 		TrainingSet building_table = TrainingSet(attr, category_index,
 				missing_value_mark);
 		size_t examplesCount = building_table.readFromStream(building_set_file,
 				separator);
-		cout << "Number of readed examples to build:"
+		cout << "Number of readed examples to build: "
 				<< examplesCount << endl;
 		building_set_file.close();
 		DecisionTree* dt = NULL;
@@ -139,7 +142,7 @@ int main(int argc, char* argv[]) {
 		if (to_classify_set_file.is_open()) {
 			getline(to_classify_set_file, line);
 		} else
-			cout << "Unable to open file: " << argv[3] << endl;
+			throw string("Unable to open file: " + string(argv[3]));
 
 		tok = tokenizer(line, sep);
 		for (tokenizer::iterator tok_iter = tok.begin(); tok_iter != tok.end();
@@ -150,7 +153,7 @@ int main(int argc, char* argv[]) {
 				missing_value_mark);
 		examplesCount = to_classify_table.readFromStream(to_classify_set_file,
 				separator);
-		cout << "Number of readed examples to classify:"
+		cout << "Number of readed examples to classify: "
 				<< examplesCount << endl;
 		to_classify_set_file.close();
 		shared_ptr<vector<string> > result(dt->classify(to_classify_table));
@@ -166,7 +169,7 @@ int main(int argc, char* argv[]) {
 			if (prunning_set_file.is_open()) {
 				getline(prunning_set_file, line);
 			} else
-				cout << "Unable to open file: " << argv[3] << endl;
+				throw string("Unable to open file: " + string(argv[3]));
 
 			tok = tokenizer(line, sep);
 			for (tokenizer::iterator tok_iter = tok.begin(); tok_iter != tok.end();
@@ -177,7 +180,7 @@ int main(int argc, char* argv[]) {
 					missing_value_mark);
 			examplesCount = prunning_table.readFromStream(prunning_set_file,
 					separator);
-			cout << "Number of readed examples to prune:"
+			cout << "Number of readed examples to prune: "
 					<< examplesCount << endl;
 			prunning_set_file.close();
 			static_cast<ZPRDecisionTree*>(dt)->reducedErrorPruning(prunning_table);
@@ -194,9 +197,14 @@ int main(int argc, char* argv[]) {
 		er2.count(result2, to_classify_table);
 		cout << "Error rate after pruning: " << er2.get() << endl;
 		delete dt;
+	} catch (std::string& err) {
+		cerr << err << endl;
+		return EXIT_FAILURE;
 	} catch (std::exception& e) {
 		cerr << e.what() << endl;
+		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;
 }
+

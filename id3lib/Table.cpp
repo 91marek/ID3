@@ -6,6 +6,7 @@
 #include <boost/tokenizer.hpp>
 #include <iostream>
 #include <fstream>
+#include <limits>
 
 using std::vector;
 using std::string;

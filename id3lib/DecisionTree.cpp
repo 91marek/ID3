@@ -12,6 +12,7 @@ const float EPSILON = 0.00001;
 #include <iostream>
 #include <queue>
 #include <cmath>	// log10()
+#include <limits>
 using namespace id3lib;
 using std::vector;
 using std::string;
